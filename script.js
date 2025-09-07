@@ -1,3 +1,5 @@
+import { teams } from './statics.js';
+
 // Sample data
 const pool = [
   {
@@ -84,7 +86,7 @@ function populatePlayerTable(playerName) {
   selectedPlayer.teamList.forEach(team => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${team.shortName}</td>
+      <td>${team}</td>
       <td>OPPONENT</td>        <!-- Placeholder for opponent -->
       <td>SCORE</td>           <!-- Placeholder for score -->
       <td>RESULT</td>          <!-- Placeholder for W/L -->
