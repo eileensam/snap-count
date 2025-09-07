@@ -67,3 +67,40 @@ const weekSelect = document.querySelector("#week-select");
   option.textContent = `Week ${week}`;
   weekSelect.appendChild(option);
 });
+
+// Player table reference
+const playerTableBody = document.querySelector("#player-table tbody");
+
+// Function to populate player table
+function populatePlayerTable(playerName) {
+  // Clear existing rows
+  playerTableBody.innerHTML = "";
+
+  // Find the selected player
+  const selectedPlayer = pool.find(p => p.player === playerName);
+  if (!selectedPlayer) return;
+
+  // Populate table with their teams
+  selectedPlayer.teamList.forEach(team => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${team.shortName}</td>
+      <td>OPPONENT</td>        <!-- Placeholder for opponent -->
+      <td>SCORE</td>           <!-- Placeholder for score -->
+      <td>RESULT</td>          <!-- Placeholder for W/L -->
+      <td>POINTS</td>          <!-- Placeholder for points -->
+    `;
+    playerTableBody.appendChild(row);
+  });
+}
+
+// Initial population for the first player
+if (pool.length > 0) {
+  populatePlayerTable(pool[0].player);
+}
+
+// Event listener for player dropdown
+playerSelect.addEventListener("change", (e) => {
+  populatePlayerTable(e.target.value);
+});
+
