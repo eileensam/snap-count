@@ -1,48 +1,4 @@
-import { teams } from './statics.js';
-
-// Sample data
-const pool = [
-  {
-    player: "Chris",
-    teamList: [
-        teams.RAVENS,
-        teams.COMMANDERS,
-        teams.CHARGERS,
-        teams.SAINTS
-    ],
-    totalPoints: "?"
-  },
-  {
-    player: "Eileen",
-    teamList: [
-        teams.BILLS,
-        teams.EAGLES,
-        teams.BENGALS,
-        teams.GIANTS
-    ],
-    totalPoints: "?"
-    },
-  {
-    player: "Emma",
-    teamList: [
-        teams.RAVENS,
-        teams.EAGLES,
-        teams.PACKERS,
-        teams.TITANS
-    ],
-    totalPoints: "?"
-    },
-  {
-    player: "Erika",
-    teamList: [
-        teams.BILLS,
-        teams.RAVENS,
-        teams.LIONS,
-        teams.SAINTS
-    ],
-    totalPoints: "?"
-    },
-];
+import { pool, teams } from './statics.js';
 
 // Populate leaderboard
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");

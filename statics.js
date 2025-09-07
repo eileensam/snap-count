@@ -33,6 +33,49 @@ export const teams = {
     SAINTS: "Saints",
 }
 
+export const pool = [
+  {
+    player: "Chris",
+    teamList: [
+        teams.RAVENS,
+        teams.COMMANDERS,
+        teams.CHARGERS,
+        teams.SAINTS
+    ],
+    totalPoints: "?"
+  },
+  {
+    player: "Eileen",
+    teamList: [
+        teams.BILLS,
+        teams.EAGLES,
+        teams.BENGALS,
+        teams.GIANTS
+    ],
+    totalPoints: "?"
+    },
+  {
+    player: "Emma",
+    teamList: [
+        teams.RAVENS,
+        teams.EAGLES,
+        teams.PACKERS,
+        teams.TITANS
+    ],
+    totalPoints: "?"
+    },
+  {
+    player: "Erika",
+    teamList: [
+        teams.BILLS,
+        teams.RAVENS,
+        teams.LIONS,
+        teams.SAINTS
+    ],
+    totalPoints: "?"
+    },
+];
+
 //export const teamCosts = [
 //    {name: teams.BILLS, cost: 75},
 //    {name: teams.RAVENS, cost: 75},
