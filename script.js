@@ -5,40 +5,40 @@ const pool = [
   {
     player: "Chris",
     teamList: [
-        {
-            shortName: "NAME",
-            cost: 999
-        },
+        teams.RAVENS,
+        teams.COMMANDERS,
+        teams.CHARGERS,
+        teams.SAINTS
     ],
     totalPoints: "?"
   },
   {
     player: "Eileen",
     teamList: [
-        {
-            shortName: "NAME",
-            cost: 999
-        },
+        teams.BILLS,
+        teams.EAGLES,
+        teams.BENGALS,
+        teams.GIANTS
     ],
     totalPoints: "?"
     },
   {
     player: "Emma",
     teamList: [
-        {
-            shortName: "NAME",
-            cost: 999
-        },
+        teams.RAVENS,
+        teams.EAGLES,
+        teams.PACKERS,
+        teams.TITANS
     ],
     totalPoints: "?"
     },
   {
     player: "Erika",
     teamList: [
-        {
-            shortName: "NAME",
-            cost: 999
-        },
+        teams.BILLS,
+        teams.RAVENS,
+        teams.LIONS,
+        teams.SAINTS
     ],
     totalPoints: "?"
     },
@@ -63,7 +63,7 @@ pool.forEach(p => {
 
 // Populate week dropdown (example: weeks 1–3)
 const weekSelect = document.querySelector("#week-select");
-[1, 2, 3].forEach(week => {
+[1].forEach(week => {
   const option = document.createElement("option");
   option.value = week;
   option.textContent = `Week ${week}`;
