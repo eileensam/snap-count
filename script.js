@@ -1,7 +1,9 @@
 // Sample data
 const pool = [
-  { player: "Alice", totalPoints: 5 },
-  { player: "Bob", totalPoints: 3 },
+  { player: "Chris", totalPoints: "?" },
+  { player: "Eileen", totalPoints: "?" },
+  { player: "Emma", totalPoints: "?" },
+  { player: "Erika", totalPoints: "?" },
 ];
 
 // Populate leaderboard
