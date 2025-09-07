@@ -1,6 +1,7 @@
-import { pool, teams } from './statics.js';
+import { pool, teams, pointsBySeason } from './statics.js';
 
 let teamGames = [];
+let season = "REG"
 
 // Populate leaderboard
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -55,7 +56,7 @@ function populatePlayerTable(playerName) {
     // Result for the player’s team
     const result = game.score > game.opponentScore ? "W" : (game.score < game.opponentScore ? "L" : "T");
 
-    const points = "?"; // Your scoring logic
+    const points = result == "W" ? pointsBySeason[season] : (result == "T" ? 0.5 * pointsBySeason[season] : 0); // Your scoring logic
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -74,6 +75,8 @@ async function fetchScores() {
   try {
     const response = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
     const data = await response.json();
+
+    console.log(data)
 
     teamGames = data['events'].flatMap(event => {
       const [home, away] = event.competitions[0].competitors;
