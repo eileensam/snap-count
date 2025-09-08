@@ -56,7 +56,13 @@ function populatePlayerTable(playerName) {
 
     const opponent = game.opponent ?? "N/A";
     const winner = game.score >= game.opponentScore ? game.team : game.opponent;
-    const fullScore = `${game.score}-${game.opponentScore} ${winner}`;
+
+    let fullScore = `${game.score}-${game.opponentScore}`;
+    if (game.score != game.opponentScore) {
+        fullScore += " " + winner
+    }
+
+    // TODO Only display result and points if game is final
     const result = game.score > game.opponentScore ? "W" : (game.score < game.opponentScore ? "L" : "T");
     const points = result === "W" ? pointsBySeason[season] : (result === "T" ? 0.5 * pointsBySeason[season] : 0);
 
