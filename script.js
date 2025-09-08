@@ -1,18 +1,23 @@
-import { pool, teams, pointsBySeason } from './statics.js';
+import { pool, teams, pointsBySeason, players } from './statics.js';
 
 let teamGames = [];
-let season = "REG"
+let season = "REG";
 
-// Populate leaderboard
+// Initialize pointsByPlayer
+let pointsByPlayer = {
+  [players.EILEEN]: 0,
+  [players.EMMA]: 0,
+  [players.ERIKA]: 0,
+  [players.CHRIS]: 0,
+};
+
+// DOM references
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
-pool.forEach(p => {
-  const row = document.createElement("tr");
-  row.innerHTML = `<td>${p.player}</td><td>${p.totalPoints}</td>`;
-  leaderboardTable.appendChild(row);
-});
+const playerSelect = document.querySelector("#player-select");
+const weekSelect = document.querySelector("#week-select");
+const playerTableBody = document.querySelector("#player-table tbody");
 
 // Populate player dropdown
-const playerSelect = document.querySelector("#player-select");
 pool.forEach(p => {
   const option = document.createElement("option");
   option.value = p.player;
@@ -21,7 +26,6 @@ pool.forEach(p => {
 });
 
 // Populate week dropdown (example: week 1)
-const weekSelect = document.querySelector("#week-select");
 [1].forEach(week => {
   const option = document.createElement("option");
   option.value = week;
@@ -29,34 +33,32 @@ const weekSelect = document.querySelector("#week-select");
   weekSelect.appendChild(option);
 });
 
-// Player table reference
-const playerTableBody = document.querySelector("#player-table tbody");
+// Function to populate leaderboard
+function populateLeaderboard() {
+  leaderboardTable.innerHTML = ""; // Clear previous rows
+  pool.forEach(p => {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${p.player}</td><td>${pointsByPlayer[p.player]}</td>`;
+    leaderboardTable.appendChild(row);
+  });
+}
 
 // Function to populate player table
 function populatePlayerTable(playerName) {
-  // Clear existing rows
-  playerTableBody.innerHTML = "";
+  playerTableBody.innerHTML = ""; // Clear existing rows
 
-  // Find the selected player
   const selectedPlayer = pool.find(p => p.player === playerName);
   if (!selectedPlayer) return;
 
-  // Populate table with their teams
   selectedPlayer.teamList.forEach(team => {
     const game = teamGames.find(g => g.team === team);
     if (!game) return;
-    const opponent = game?.opponent ?? "N/A";
 
-    // Determine winner
+    const opponent = game.opponent ?? "N/A";
     const winner = game.score >= game.opponentScore ? game.team : game.opponent;
-
-    // Full score string
     const fullScore = `${game.score}-${game.opponentScore} ${winner}`;
-
-    // Result for the player’s team
     const result = game.score > game.opponentScore ? "W" : (game.score < game.opponentScore ? "L" : "T");
-
-    const points = result == "W" ? pointsBySeason[season] : (result == "T" ? 0.5 * pointsBySeason[season] : 0); // Your scoring logic
+    const points = result === "W" ? pointsBySeason[season] : (result === "T" ? 0.5 * pointsBySeason[season] : 0);
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -70,13 +72,31 @@ function populatePlayerTable(playerName) {
   });
 }
 
+// Calculate points for all players
+function calculateAllPoints() {
+  // Reset all points
+  Object.keys(pointsByPlayer).forEach(p => pointsByPlayer[p] = 0);
+
+  pool.forEach(player => {
+    player.teamList.forEach(team => {
+      const game = teamGames.find(g => g.team === team);
+      if (!game) return;
+
+      const result = game.score > game.opponentScore ? "W" : (game.score < game.opponentScore ? "L" : "T");
+      const points = result === "W" ? pointsBySeason[season] : (result === "T" ? 0.5 * pointsBySeason[season] : 0);
+      pointsByPlayer[player.player] += points;
+    });
+  });
+
+  // Update leaderboard
+  populateLeaderboard();
+}
+
 // Fetch the entire ESPN scoreboard
 async function fetchScores() {
   try {
     const response = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
     const data = await response.json();
-
-    console.log(data)
 
     teamGames = data['events'].flatMap(event => {
       const [home, away] = event.competitions[0].competitors;
@@ -101,6 +121,9 @@ async function fetchScores() {
 
     console.log("Team games:", teamGames);
 
+    // Calculate points for all players and populate leaderboard
+    calculateAllPoints();
+
     // Populate the first player table after data is loaded
     if (pool.length > 0) {
       populatePlayerTable(pool[0].player);
@@ -111,10 +134,10 @@ async function fetchScores() {
   }
 }
 
-// Actually call fetchScores
-fetchScores();
-
 // Event listener for player dropdown
 playerSelect.addEventListener("change", (e) => {
   populatePlayerTable(e.target.value);
 });
+
+// Start fetching scores
+fetchScores();

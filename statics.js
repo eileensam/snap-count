@@ -1,3 +1,10 @@
+export const players = {
+    EILEEN: "Eileen",
+    EMMA: "Emma",
+    CHRIS: "Chris",
+    ERIKA: "Erika",
+}
+
 export const teams = {
     BILLS: "Bills",
     RAVENS: "Ravens",
@@ -35,44 +42,40 @@ export const teams = {
 
 export const pool = [
   {
-    player: "Chris",
+    player: players.CHRIS,
     teamList: [
         teams.RAVENS,
         teams.COMMANDERS,
         teams.CHARGERS,
         teams.SAINTS
-    ],
-    totalPoints: "?"
+    ]
   },
   {
-    player: "Eileen",
+    player: players.EILEEN,
     teamList: [
         teams.BILLS,
         teams.EAGLES,
         teams.BENGALS,
         teams.GIANTS
-    ],
-    totalPoints: "?"
+    ]
     },
   {
-    player: "Emma",
+    player: players.EMMA,
     teamList: [
         teams.RAVENS,
         teams.EAGLES,
         teams.PACKERS,
         teams.TITANS
-    ],
-    totalPoints: "?"
+    ]
     },
   {
-    player: "Erika",
+    player: players.ERIKA,
     teamList: [
         teams.BILLS,
         teams.RAVENS,
         teams.LIONS,
         teams.SAINTS
-    ],
-    totalPoints: "?"
+    ]
     },
 ];
 
