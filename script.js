@@ -62,9 +62,20 @@ function populatePlayerTable(playerName) {
         fullScore += " " + winner
     }
 
-    // TODO Only display result and points if game is final
-    const result = game.score > game.opponentScore ? "W" : (game.score < game.opponentScore ? "L" : "T");
-    const points = result === "W" ? pointsBySeason[season] : (result === "T" ? 0.5 * pointsBySeason[season] : 0);
+    let result = "?"
+    let points = "?"
+    if (game.status == "Final") {
+        if (game.score > game.opponentScore) {
+            result = "W"
+            points = pointsBySeason[season]
+        } else if (game.score < game.opponentScore) {
+            result = "L"
+            points = 0
+        } else {
+            result = "T"
+            points = 0.5 * pointsBySeason[season]
+        }
+    }
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -72,13 +83,12 @@ function populatePlayerTable(playerName) {
       <td>${opponent}</td>
       <td>${fullScore}</td>
       <td>${result}</td>
-      <td>${points}</td>
+      <td>${points.toString()}</td>
     `;
     playerTableBody.appendChild(row);
   });
 }
 
-// Calculate points for all players
 function calculateAllPoints() {
   // Reset all points
   Object.keys(pointsByPlayer).forEach(p => pointsByPlayer[p] = 0);
@@ -88,13 +98,15 @@ function calculateAllPoints() {
       const game = teamGames.find(g => g.team === team);
       if (!game) return;
 
+      // Only count points if the game is final
+      if (game.status !== "Final") return;
+
       const result = game.score > game.opponentScore ? "W" : (game.score < game.opponentScore ? "L" : "T");
       const points = result === "W" ? pointsBySeason[season] : (result === "T" ? 0.5 * pointsBySeason[season] : 0);
       pointsByPlayer[player.player] += points;
     });
   });
 
-  // Update leaderboard
   populateLeaderboard();
 }
 
