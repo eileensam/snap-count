@@ -59,10 +59,10 @@ pool.forEach(p => {
   weekSelect.appendChild(option);
 });
 
-// Function to populate leaderboard
 function populateLeaderboard() {
   leaderboardTable.innerHTML = ""; // Clear previous rows
-  pool.forEach(p => {
+  const sortedPool = [...pool].sort((a, b) => pointsByPlayer[b.player] - pointsByPlayer[a.player]);
+  sortedPool.forEach(p => {
     const row = document.createElement("tr");
     row.innerHTML = `<td>${p.player}</td><td>${pointsByPlayer[p.player]}</td>`;
     leaderboardTable.appendChild(row);
