@@ -74,4 +74,19 @@ option {
   background-color: #333333;
   color: #FFD700;
 }
+.divider {
+  border: none;
+  border-top: 2px solid #FFD700; /* yellow line */
+  margin: 20px 0;
+}
+
+.fun-fact {
+  font-family: 'Press Start 2P', monospace; /* pixel-style font */
+  color: #00FF00; /* retro green text */
+  background-color: #111; /* dark background */
+  padding: 10px;
+  border: 2px solid #FFD700;
+  text-align: center;
+}
+
 
