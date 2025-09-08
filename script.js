@@ -116,7 +116,13 @@ function populatePlayerTable(playerName) {
       <td>${result}</td>
       <td>${points.toString()}</td>
     `;
+    if (result === "W") {
+      row.cells[3].style.color = "green";
+    } else if (result === "L") {
+      row.cells[3].style.color = "red";
+    }
     playerTableBody.appendChild(row);
+
   });
 }
 
