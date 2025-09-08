@@ -47,7 +47,7 @@ export const pool = [
         teams.RAVENS,
         teams.COMMANDERS,
         teams.CHARGERS,
-        teams.SAINTS
+        teams.PANTHERS
     ]
   },
   {
