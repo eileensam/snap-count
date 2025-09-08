@@ -57,14 +57,20 @@ function populatePlayerTable(playerName) {
     const opponent = game.opponent ?? "N/A";
     const winner = game.score >= game.opponentScore ? game.team : game.opponent;
 
-    let fullScore = `${game.score}-${game.opponentScore}`;
-    if (game.score != game.opponentScore) {
-        fullScore += " " + winner
+    let fullScore
+    if (game.state == "pre") {
+        fullScore = game.status
+    } else {
+        fullScore = `${game.score}-${game.opponentScore}`;
+        if (game.score != game.opponentScore) {
+                fullScore += " " + winner
+        }
     }
+
 
     let result = "?"
     let points = "?"
-    if (game.status == "Final") {
+    if (game.state == "post") {
         if (game.score > game.opponentScore) {
             result = "W"
             points = pointsBySeason[season]
@@ -125,6 +131,7 @@ async function fetchScores() {
           score: parseInt(home.score),
           opponent: away.team.name,
           opponentScore: parseInt(away.score),
+          state: event.status.type.state,
           status: event.status.type.shortDetail
         },
         {
@@ -132,6 +139,7 @@ async function fetchScores() {
           score: parseInt(away.score),
           opponent: home.team.name,
           opponentScore: parseInt(home.score),
+          state: event.status.type.state,
           status: event.status.type.shortDetail
         }
       ];
