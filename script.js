@@ -52,7 +52,7 @@ pool.forEach(p => {
 });
 
 // Populate week dropdown (example: week 1)
-[1].forEach(week => {
+[2].forEach(week => { // TODO add all weeks
   const option = document.createElement("option");
   option.value = week;
   option.textContent = `Week ${week}`;
