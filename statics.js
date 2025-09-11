@@ -83,6 +83,8 @@ export const pointsBySeason = {
     "REG": 1
 }
 
+export const weekList = [1, 2]
+
 //export const teamCosts = [
 //    {name: teams.BILLS, cost: 75},
 //    {name: teams.RAVENS, cost: 75},
