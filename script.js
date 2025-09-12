@@ -62,17 +62,21 @@ pool.forEach((p, index) => {
   }
 });
 
-weekList.forEach((week, index) => {
-  const option = document.createElement("option");
-  option.value = week;
-  option.textContent = `Week ${week}`;
-  weekSelect.appendChild(option);
+weekList
+  .slice()
+  .sort((a, b) => b - a) // sort descending
+  .forEach((week, index) => {
+    const option = document.createElement("option");
+    option.value = week;
+    option.textContent = `Week ${week}`;
+    weekSelect.appendChild(option);
 
-  if (index === 0) {
-    weekSelect.value = week;
-    selectedWeek = Number(week);
-  }
-});
+    if (index === 0) {
+      weekSelect.value = week;
+      selectedWeek = Number(week);
+    }
+  });
+
 
 // ==========================
 // Leaderboard table
