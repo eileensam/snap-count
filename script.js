@@ -154,21 +154,28 @@ function populatePlayerTable() {
 // Calculate points for all players
 // ==========================
 function calculateAllPoints() {
+  // Reset points
   Object.keys(pointsByPlayer).forEach(p => pointsByPlayer[p] = 0);
 
   pool.forEach(player => {
     player.teamList.forEach(team => {
-      const game = teamGamesForWeek.find(g => g.team === team);
-      if (!game || game.state !== "post") return;
+      // Iterate over all weeks
+      Object.values(totalGames).forEach(gamesThisWeek => {
+        const game = gamesThisWeek.find(g => g.team === team);
+        if (!game || game.state !== "post") return;
 
-      const result = game.score > game.opponentScore ? "W" : (game.score < game.opponentScore ? "L" : "T");
-      const points = result === "W" ? pointsBySeason[season] : (result === "T" ? 0.5 * pointsBySeason[season] : 0);
-      pointsByPlayer[player.player] += points;
+        const result = game.score > game.opponentScore ? "W" :
+                       (game.score < game.opponentScore ? "L" : "T");
+        const points = result === "W" ? pointsBySeason[season] :
+                       (result === "T" ? 0.5 * pointsBySeason[season] : 0);
+        pointsByPlayer[player.player] += points;
+      });
     });
   });
 
   populateLeaderboard();
 }
+
 
 // ==========================
 // Fetch scores from ESPN
