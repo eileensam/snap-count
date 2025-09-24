@@ -1,8 +1,9 @@
-import { pool, teams, pointsBySeason, players, weekList } from './statics.js';
+import { pool, teams, pointsBySeason, players } from './statics.js';
 
 let teamGamesForWeek = [];
 let totalGames = {};
 let season = "REG";
+let weekList = [];
 
 let selectedPlayer = null;
 let selectedWeek = null;
@@ -61,21 +62,6 @@ pool.forEach((p, index) => {
     selectedPlayer = p.player;
   }
 });
-
-weekList
-  .slice()
-  .sort((a, b) => b - a) // sort descending
-  .forEach((week, index) => {
-    const option = document.createElement("option");
-    option.value = week;
-    option.textContent = `Week ${week}`;
-    weekSelect.appendChild(option);
-
-    if (index === 0) {
-      weekSelect.value = week;
-      selectedWeek = Number(week);
-    }
-  });
 
 
 // ==========================
@@ -180,8 +166,35 @@ function calculateAllPoints() {
 // ==========================
 // Fetch scores from ESPN
 // ==========================
-async function fetchScores(weekNumber) {
+
+async function fetchWeek() {
   showLoading();
+  try {
+    const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`);
+    const data = await response.json();
+    const week = data["week"]["number"]
+    console.log("Week: ", week)
+    weekList = Array.from({ length: week }, (_, i) => week - i);
+    weekList
+      .slice()
+      .sort((a, b) => b - a) // sort descending
+      .forEach((week, index) => {
+        const option = document.createElement("option");
+        option.value = week;
+        option.textContent = `Week ${week}`;
+        weekSelect.appendChild(option);
+
+        if (index === 0) {
+          weekSelect.value = week;
+          selectedWeek = Number(week);
+        }
+      });
+  } catch (err) {
+     console.error("Error fetching week:", err);
+  }
+}
+
+async function fetchScores(weekNumber) {
   try {
     const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?&week=${weekNumber}`);
     const data = await response.json();
@@ -220,6 +233,7 @@ async function fetchScores(weekNumber) {
 // Initialize app
 // ==========================
 async function init() {
+  await fetchWeek()
   // Fetch all weeks sequentially
   for (const week of weekList) {
     await fetchScores(week);
