@@ -174,6 +174,7 @@ async function fetchWeek() {
     const data = await response.json();
     const week = data["week"]["number"]
     console.log("Week: ", week)
+    document.getElementById("current-week").textContent = `Week: ${week}`;
     weekList = Array.from({ length: week }, (_, i) => week - i);
     weekList
       .slice()
