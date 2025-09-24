@@ -80,7 +80,7 @@ export const pool = [
 ];
 
 export const pointsBySeason = {
-    "REG": 1
+    "Regular Season": 1
 }
 
 //export const weekList = [1, 2, 3, 4]

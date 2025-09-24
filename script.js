@@ -2,7 +2,7 @@ import { pool, teams, pointsBySeason, players } from './statics.js';
 
 let teamGamesForWeek = [];
 let totalGames = {};
-let season = "REG";
+let seasonType = "";
 let weekList = [];
 
 let selectedPlayer = null;
@@ -111,13 +111,13 @@ function populatePlayerTable() {
     if (game.state === "post") {
       if (game.score > game.opponentScore) {
         result = "W";
-        points = pointsBySeason[season];
+        points = pointsBySeason[seasonType];
       } else if (game.score < game.opponentScore) {
         result = "L";
         points = 0;
       } else {
         result = "T";
-        points = 0.5 * pointsBySeason[season];
+        points = 0.5 * pointsBySeason[seasonType];
       }
     }
 
@@ -152,8 +152,8 @@ function calculateAllPoints() {
 
         const result = game.score > game.opponentScore ? "W" :
                        (game.score < game.opponentScore ? "L" : "T");
-        const points = result === "W" ? pointsBySeason[season] :
-                       (result === "T" ? 0.5 * pointsBySeason[season] : 0);
+        const points = result === "W" ? pointsBySeason[seasonType] :
+                       (result === "T" ? 0.5 * pointsBySeason[seasonType] : 0);
         pointsByPlayer[player.player] += points;
       });
     });
@@ -173,8 +173,10 @@ async function fetchWeek() {
     const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`);
     const data = await response.json();
     const week = data["week"]["number"]
-    console.log("Week: ", week)
-    document.getElementById("current-week").textContent = `Week: ${week}`;
+    seasonType = data["leagues"][0]["season"]["type"]["name"]
+//    console.log("Season type: ", data["leagues"][0]["season"]["type"]["name"])
+    document.getElementById("current-week").textContent = `Week ${week}`;
+    document.getElementById("season-type").textContent = `${seasonType}`;
     weekList = Array.from({ length: week }, (_, i) => week - i);
     weekList
       .slice()
