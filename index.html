@@ -5,6 +5,7 @@
     <title>Snap-Count</title>
     <link href="style.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <h1>Snap-Count</h1>
@@ -28,6 +29,11 @@
         <!-- JS will populate this -->
         </tbody>
     </table>
+</section>
+
+<!-- Leaderboard Graph -->
+<section id="leaderboard-graph">
+    <canvas id="leaderboardChart"></canvas>
 </section>
 
 <br>
@@ -70,7 +76,6 @@
         Sports</a>, "The Eagles were the first NFL team since at least 1978 to block two field goals in the
     fourth quarter of a game."
 </div>
-
 
 <script src="script.js" type="module"></script>
 </body>

@@ -63,7 +63,6 @@ pool.forEach((p, index) => {
   }
 });
 
-
 // ==========================
 // Leaderboard table
 // ==========================
@@ -140,12 +139,10 @@ function populatePlayerTable() {
 // Calculate points for all players
 // ==========================
 function calculateAllPoints() {
-  // Reset points
   Object.keys(pointsByPlayer).forEach(p => pointsByPlayer[p] = 0);
 
   pool.forEach(player => {
     player.teamList.forEach(team => {
-      // Iterate over all weeks
       Object.values(totalGames).forEach(gamesThisWeek => {
         const game = gamesThisWeek.find(g => g.team === team);
         if (!game || game.state !== "post") return;
@@ -162,25 +159,90 @@ function calculateAllPoints() {
   populateLeaderboard();
 }
 
+// ==========================
+// Chart.js integration
+// ==========================
+let leaderboardChart = null;
+
+function drawLeaderboardChart() {
+  const ctx = document.getElementById("leaderboardChart").getContext("2d");
+  const playersList = Object.keys(pointsByPlayer);
+  const weeks = Object.keys(totalGames)
+    .map(w => Number(w))
+    .sort((a, b) => a - b)
+    .filter(w => w <= selectedWeek);
+
+  const distinctColors = [
+    "#4CFF4C", // green
+    "#FF4C4C", // red
+    "#4C4CFF", // blue
+    "#FFD700", // gold
+    "#FF7F50", // coral
+    "#8A2BE2", // blueviolet
+  ];
+
+  const datasets = playersList.map((player, index) => {
+    let cumulative = 0;
+    const data = weeks.map(week => {
+      const gamesThisWeek = totalGames[week] || [];
+      gamesThisWeek.forEach(game => {
+        if (pool.find(p => p.player === player)?.teamList.includes(game.team)) {
+          if (game.state === "post") {
+            if (game.score > game.opponentScore) cumulative += pointsBySeason[seasonType];
+            else if (game.score === game.opponentScore) cumulative += 0.5 * pointsBySeason[seasonType];
+          }
+        }
+      });
+      return cumulative;
+    });
+
+    return {
+      label: player,
+      data,
+      fill: false,
+      borderColor: distinctColors[index % distinctColors.length],
+      backgroundColor: distinctColors[index % distinctColors.length],
+      tension: 0.2
+    };
+  });
+
+  if (leaderboardChart) leaderboardChart.destroy();
+
+  leaderboardChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: weeks.map(w => `Week ${w}`),
+      datasets
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "top" },
+        title: { display: false } // removed chart title
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+}
 
 // ==========================
 // Fetch scores from ESPN
 // ==========================
-
 async function fetchWeek() {
   showLoading();
   try {
     const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`);
     const data = await response.json();
     const week = data["week"]["number"]
-    seasonType = data["leagues"][0]["season"]["type"]["name"]
-//    console.log("Season type: ", data["leagues"][0]["season"]["type"]["name"])
+    seasonType = data["leagues"][0]["season"]["type"]["name"];
     document.getElementById("current-week").textContent = `Week ${week}`;
     document.getElementById("season-type").textContent = `${seasonType}`;
     weekList = Array.from({ length: week }, (_, i) => week - i);
     weekList
       .slice()
-      .sort((a, b) => b - a) // sort descending
+      .sort((a, b) => b - a)
       .forEach((week, index) => {
         const option = document.createElement("option");
         option.value = week;
@@ -236,14 +298,14 @@ async function fetchScores(weekNumber) {
 // Initialize app
 // ==========================
 async function init() {
-  await fetchWeek()
-  // Fetch all weeks sequentially
+  await fetchWeek();
   for (const week of weekList) {
     await fetchScores(week);
   }
 
   calculateAllPoints();
   populatePlayerTable();
+  drawLeaderboardChart();
 }
 
 init();
@@ -259,4 +321,5 @@ playerSelect.addEventListener("change", (e) => {
 weekSelect.addEventListener("change", (e) => {
   selectedWeek = Number(e.target.value);
   populatePlayerTable();
+  drawLeaderboardChart();
 });
