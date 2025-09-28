@@ -1,8 +1,19 @@
 export const players = {
     EILEEN: "Eileen",
     EMMA: "Emma",
-    CHRIS: "Chris",
+    CHRIS_R: "Chris",
     ERIKA: "Erika",
+    STEPHEN: "Stephen",
+    CHRIS_V: "Chris V",
+    PHYLLIS: "Phyllis",
+    SCOTT: "Scott",
+    PETE: "Pete",
+    STACY: "Stacy",
+    SEAN: "Sean",
+    BEN: "Ben",
+    TIM: "Tim",
+    JANET: "Janet",
+    MARK: "Mark",
 }
 
 export const teams = {
@@ -42,7 +53,8 @@ export const teams = {
 
 export const pool = [
   {
-    player: players.CHRIS,
+    player: players.CHRIS_R,
+    inSnapCount: true,
     teamList: [
         teams.RAVENS,
         teams.COMMANDERS,
@@ -52,6 +64,7 @@ export const pool = [
   },
   {
     player: players.EILEEN,
+    inSnapCount: true,
     teamList: [
         teams.BILLS,
         teams.EAGLES,
@@ -61,6 +74,7 @@ export const pool = [
     },
   {
     player: players.EMMA,
+    inSnapCount: true,
     teamList: [
         teams.RAVENS,
         teams.EAGLES,
@@ -70,11 +84,122 @@ export const pool = [
     },
   {
     player: players.ERIKA,
+    inSnapCount: true,
     teamList: [
         teams.BILLS,
         teams.RAVENS,
         teams.LIONS,
         teams.SAINTS
+    ]
+    },
+  {
+    player: players.STEPHEN,
+    inSnapCount: false,
+    teamList: [
+        teams.BENGALS,
+        teams.COMMANDERS,
+        teams.BRONCOS,
+        teams.BUCCANEERS
+    ]
+    },
+  {
+    player: players.CHRIS_V,
+    inSnapCount: false,
+    teamList: [
+        teams.EAGLES,
+        teams.BUCCANEERS,
+        teams.TEXANS,
+        teams.BRONCOS,
+    ]
+    },
+  {
+    player: players.PHYLLIS,
+    inSnapCount: false,
+    teamList: [
+        teams.CHIEFS,
+        teams.LIONS,
+        teams.COMMANDERS,
+        teams.GIANTS,
+    ]
+    },
+  {
+    player: players.SCOTT,
+    inSnapCount: false,
+    teamList: [
+        teams.EAGLES,
+        teams.COMMANDERS,
+        teams.PACKERS,
+        teams.COLTS,
+    ]
+    },
+  {
+    player: players.PETE,
+    inSnapCount: false,
+    teamList: [
+        teams.LIONS,
+        teams.BENGALS,
+        teams.TEXANS,
+        teams.CARDINALS,
+    ]
+    },
+  {
+    player: players.STACY,
+    inSnapCount: false,
+    teamList: [
+        teams.EAGLES,
+        teams.PACKERS,
+        teams.CHARGERS,
+        teams.STEELERS,
+    ]
+    },
+  {
+    player: players.SEAN,
+    inSnapCount: false,
+    teamList: [
+        teams.BILLS,
+        teams.RAVENS,
+        teams.CHIEFS,
+        teams.BROWNS,
+    ]
+    },
+  {
+    player: players.BEN,
+    inSnapCount: false,
+    teamList: [
+        teams.BILLS,
+        teams.EAGLES,
+        teams.VIKINGS,
+        teams.GIANTS,
+    ]
+    },
+  {
+    player: players.TIM,
+    inSnapCount: false,
+    teamList: [
+        teams.BILLS,
+        teams.RAVENS,
+        teams.EAGLES,
+        teams.SAINTS,
+    ]
+    },
+  {
+    player: players.JANET,
+    inSnapCount: false,
+    teamList: [
+        teams.BILLS,
+        teams.CHIEFS,
+        teams.VIKINGS,
+        teams.PANTHERS,
+    ]
+    },
+  {
+    player: players.MARK,
+    inSnapCount: false,
+    teamList: [
+        teams.BILLS,
+        teams.CHIEFS,
+        teams.PACKERS,
+        teams.PANTHERS,
     ]
     },
 ];

@@ -32,8 +32,23 @@
 
 <h1>Snap-Count</h1>
 <h3>NFL Pool</h3>
+
 <h4 id="current-week"></h4>
 <h4 id="season-type"></h4>
+
+<br>
+
+<!-- Global Group Toggle -->
+<div id="group-toggle" style="margin: 10px 0;">
+    <label>
+        <input checked name="leaderboard-group" type="radio" value="snap">
+        Small Group
+    </label>
+    <label style="margin-left: 10px;">
+        <input name="leaderboard-group" type="radio" value="all">
+        Full League
+    </label>
+</div>
 
 <br>
 
@@ -43,6 +58,7 @@
     <table id="leaderboard-table">
         <thead>
         <tr>
+            <th>Rank</th>
             <th>Player</th>
             <th>Total Points</th>
         </tr>

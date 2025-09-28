@@ -8,12 +8,26 @@ let weekList = [];
 let selectedPlayer = null;
 let selectedWeek = null;
 
+// Global toggle: small group or full league
+let showSmallGroup = true;
+
 // Initialize pointsByPlayer
 let pointsByPlayer = {
   [players.EILEEN]: 0,
   [players.EMMA]: 0,
   [players.ERIKA]: 0,
-  [players.CHRIS]: 0,
+  [players.CHRIS_R]: 0,
+  [players.STEPHEN]: 0,
+  [players.CHRIS_V]: 0,
+  [players.PHYLLIS]: 0,
+  [players.SCOTT]: 0,
+  [players.PETE]: 0,
+  [players.STACY]: 0,
+  [players.SEAN]: 0,
+  [players.BEN]: 0,
+  [players.TIM]: 0,
+  [players.JANET]: 0,
+  [players.MARK]: 0,
 };
 
 // DOM references
@@ -40,16 +54,11 @@ loadingScreen.style.justifyContent = "center";
 loadingScreen.style.zIndex = "9999";
 document.body.appendChild(loadingScreen);
 
-function showLoading() {
-  loadingScreen.style.display = "flex";
-}
-
-function hideLoading() {
-  loadingScreen.style.display = "none";
-}
+function showLoading() { loadingScreen.style.display = "flex"; }
+function hideLoading() { loadingScreen.style.display = "none"; }
 
 // ==========================
-// Populate dropdowns with defaults
+// Populate dropdowns
 // ==========================
 pool.forEach((p, index) => {
   const option = document.createElement("option");
@@ -68,13 +77,35 @@ pool.forEach((p, index) => {
 // ==========================
 function populateLeaderboard() {
   leaderboardTable.innerHTML = "";
-  const sortedPool = [...pool].sort((a, b) => pointsByPlayer[b.player] - pointsByPlayer[a.player]);
-  sortedPool.forEach(p => {
+
+  const filteredPool = pool.filter(p => showSmallGroup ? p.inSnapCount : true);
+  const sortedPool = filteredPool.sort((a, b) => pointsByPlayer[b.player] - pointsByPlayer[a.player]);
+
+  let lastScore = null;
+  let lastRank = 0;
+
+  sortedPool.forEach((p, index) => {
+    const score = pointsByPlayer[p.player];
+    // Determine rank
+    let rank;
+    if (score === lastScore) {
+      rank = lastRank; // tie
+    } else {
+      rank = index + 1;
+      lastRank = rank;
+      lastScore = score;
+    }
+
     const row = document.createElement("tr");
-    row.innerHTML = `<td>${p.player}</td><td>${pointsByPlayer[p.player]}</td>`;
+    row.innerHTML = `
+      <td>${rank}</td>
+      <td>${p.player}</td>
+      <td>${score}</td>
+    `;
     leaderboardTable.appendChild(row);
   });
 }
+
 
 // ==========================
 // Player breakdown table
@@ -95,29 +126,14 @@ function populatePlayerTable() {
     const opponent = game.opponent ?? "N/A";
     const winner = game.score >= game.opponentScore ? game.team : game.opponent;
 
-    let fullScore;
-    if (game.state === "pre") {
-      fullScore = game.status;
-    } else {
-      fullScore = `${game.score}-${game.opponentScore}`;
-      if (game.score !== game.opponentScore) {
-        fullScore += " " + winner;
-      }
-    }
+    let fullScore = game.state === "pre" ? game.status : `${game.score}-${game.opponentScore}${game.score !== game.opponentScore ? " " + winner : ""}`;
 
     let result = "?";
     let points = "?";
     if (game.state === "post") {
-      if (game.score > game.opponentScore) {
-        result = "W";
-        points = pointsBySeason[seasonType];
-      } else if (game.score < game.opponentScore) {
-        result = "L";
-        points = 0;
-      } else {
-        result = "T";
-        points = 0.5 * pointsBySeason[seasonType];
-      }
+      if (game.score > game.opponentScore) { result = "W"; points = pointsBySeason[seasonType]; }
+      else if (game.score < game.opponentScore) { result = "L"; points = 0; }
+      else { result = "T"; points = 0.5 * pointsBySeason[seasonType]; }
     }
 
     const row = document.createElement("tr");
@@ -166,20 +182,15 @@ let leaderboardChart = null;
 
 function drawLeaderboardChart() {
   const ctx = document.getElementById("leaderboardChart").getContext("2d");
-  const playersList = Object.keys(pointsByPlayer);
+  const filteredPlayers = pool.filter(p => showSmallGroup ? p.inSnapCount : true);
+  const playersList = filteredPlayers.map(p => p.player);
+
   const weeks = Object.keys(totalGames)
     .map(w => Number(w))
     .sort((a, b) => a - b)
     .filter(w => w <= selectedWeek);
 
-  const distinctColors = [
-    "#4CFF4C", // green
-    "#FF4C4C", // red
-    "#4C4CFF", // blue
-    "#FFD700", // gold
-    "#FF7F50", // coral
-    "#8A2BE2", // blueviolet
-  ];
+  const distinctColors = ["#FF4C4C","#4CFF4C","#4C4CFF","#FFD700","#FF7F50","#8A2BE2"];
 
   const datasets = playersList.map((player, index) => {
     let cumulative = 0;
@@ -210,19 +221,11 @@ function drawLeaderboardChart() {
 
   leaderboardChart = new Chart(ctx, {
     type: "line",
-    data: {
-      labels: weeks.map(w => `Week ${w}`),
-      datasets
-    },
+    data: { labels: weeks.map(w => `Week ${w}`), datasets },
     options: {
       responsive: true,
-      plugins: {
-        legend: { position: "top" },
-        title: { display: false } // removed chart title
-      },
-      scales: {
-        y: { beginAtZero: true }
-      }
+      plugins: { legend: { position: "top" }, title: { display: false } },
+      scales: { y: { beginAtZero: true } }
     }
   });
 }
@@ -235,28 +238,19 @@ async function fetchWeek() {
   try {
     const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`);
     const data = await response.json();
-    const week = data["week"]["number"]
+    const week = data["week"]["number"];
     seasonType = data["leagues"][0]["season"]["type"]["name"];
     document.getElementById("current-week").textContent = `Week ${week}`;
     document.getElementById("season-type").textContent = `${seasonType}`;
     weekList = Array.from({ length: week }, (_, i) => week - i);
-    weekList
-      .slice()
-      .sort((a, b) => b - a)
-      .forEach((week, index) => {
-        const option = document.createElement("option");
-        option.value = week;
-        option.textContent = `Week ${week}`;
-        weekSelect.appendChild(option);
-
-        if (index === 0) {
-          weekSelect.value = week;
-          selectedWeek = Number(week);
-        }
-      });
-  } catch (err) {
-     console.error("Error fetching week:", err);
-  }
+    weekList.slice().sort((a, b) => b - a).forEach((week, index) => {
+      const option = document.createElement("option");
+      option.value = week;
+      option.textContent = `Week ${week}`;
+      weekSelect.appendChild(option);
+      if (index === 0) { weekSelect.value = week; selectedWeek = Number(week); }
+    });
+  } catch (err) { console.error("Error fetching week:", err); }
 }
 
 async function fetchScores(weekNumber) {
@@ -289,9 +283,7 @@ async function fetchScores(weekNumber) {
     totalGames[weekNumber] = teamGamesForWeek;
   } catch (err) {
     console.error("Error fetching scores:", err);
-  } finally {
-    hideLoading();
-  }
+  } finally { hideLoading(); }
 }
 
 // ==========================
@@ -299,9 +291,7 @@ async function fetchScores(weekNumber) {
 // ==========================
 async function init() {
   await fetchWeek();
-  for (const week of weekList) {
-    await fetchScores(week);
-  }
+  for (const week of weekList) await fetchScores(week);
 
   calculateAllPoints();
   populatePlayerTable();
@@ -322,4 +312,15 @@ weekSelect.addEventListener("change", (e) => {
   selectedWeek = Number(e.target.value);
   populatePlayerTable();
   drawLeaderboardChart();
+});
+
+// Global toggle listener
+const groupToggleRadios = document.querySelectorAll('input[name="leaderboard-group"]');
+groupToggleRadios.forEach(radio => {
+  radio.addEventListener("change", (e) => {
+    showSmallGroup = e.target.value === "snap";
+    populateLeaderboard();
+    drawLeaderboardChart();
+    populatePlayerTable();
+  });
 });
