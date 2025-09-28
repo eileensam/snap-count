@@ -1,0 +1,121 @@
+/* =====================
+   Bugnub Button
+===================== */
+#bugnubOpen {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #FFFFFF;       /* white button */
+  color: #0b3d0b;                 /* text color if needed */
+  border: 3px solid #FFD700;      /* bright yellow border */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Flag icon inside the button */
+#bugnubOpen img.bugnub-flag {
+  width: 32px;
+  height: 32px;
+}
+
+/* Hover effect for button: scales and adds glow without covering the flag */
+#bugnubOpen:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 15px rgba(255, 215, 0, 0.8); /* yellow glow */
+}
+
+/* =====================
+   Backdrop & Modal
+===================== */
+#bugnubBackdrop {
+  display: none;                  /* hidden by default */
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+
+#bugnubBackdrop .modal-content {
+  background-color: #111;        /* dark background */
+  color: #FFD700;                /* bright yellow text */
+  font-family: 'Press Start 2P', monospace;
+  border: 2px solid #FFD700;
+  padding: 20px;
+  width: min(500px, 90%);
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 0 20px #FFD700;
+}
+
+/* =====================
+   Form Styling
+===================== */
+#bugnubForm label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#bugnubForm textarea {
+  width: 90%;
+  max-width: 400px;
+  height: 100px;
+  background-color: #333333;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  font-family: 'Press Start 2P', monospace;
+  padding: 8px;
+  resize: none;
+  margin-top: 10px;
+}
+
+/* Submit button */
+#bugnubForm button[type="submit"] {
+  margin-top: 10px;
+  background-color: #FFD700;
+  color: #0b3d0b;
+  border: 2px solid #0b3d0b;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Close button */
+#bugnubClose {
+  background-color: #0b3d0b;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  margin-top: 10px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Buttons spacing */
+#bugnubForm button {
+  margin: 5px 10px 0 10px;
+}
+
+/* Hover effects for buttons */
+#bugnubForm button[type="submit"]:hover,
+#bugnubClose:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(255, 215, 0, 0.7);
+}

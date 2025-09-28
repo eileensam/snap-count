@@ -1,0 +1,24 @@
+<head>
+    <title>Bugnub</title>
+    <link href="bugnub.css" rel="stylesheet">
+</head>
+
+<!-- Floating Bugnub button -->
+<button id="bugnubOpen">
+    <img alt="Feedback" class="bugnub-flag" src="flag-icon.png">
+</button>
+
+<!-- Modal -->
+<div id="bugnubBackdrop">
+    <div class="modal-content">
+        <!--        <h3>Send feedback</h3>-->
+        <form id="bugnubForm">
+            <label>
+                What's up?<br>
+                <textarea name="message" required rows="5"></textarea>
+            </label><br><br>
+            <button type="submit">Submit</button>
+            <button id="bugnubClose" type="button">Cancel</button>
+        </form>
+    </div>
+</div>
