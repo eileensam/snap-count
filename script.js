@@ -58,22 +58,29 @@ function showLoading() { loadingScreen.style.display = "flex"; }
 function hideLoading() { loadingScreen.style.display = "none"; }
 
 // ==========================
-// Populate dropdowns
+// Populate player dropdown based on group
 // ==========================
-pool.forEach((p, index) => {
-  const option = document.createElement("option");
-  option.value = p.player;
-  option.textContent = p.player;
-  playerSelect.appendChild(option);
+function populatePlayerDropdown() {
+  playerSelect.innerHTML = "";
 
-  if (index === 0) {
-    playerSelect.value = p.player;
-    selectedPlayer = p.player;
-  }
-});
+  const filteredPool = pool.filter(p => showSmallGroup ? p.inSnapCount : true);
+
+  filteredPool.forEach((p, index) => {
+    const option = document.createElement("option");
+    option.value = p.player;
+    option.textContent = p.player;
+    playerSelect.appendChild(option);
+
+    // Set first player as selected if nothing selected yet or previous selection is filtered out
+    if (index === 0 && (!selectedPlayer || !filteredPool.some(f => f.player === selectedPlayer))) {
+      playerSelect.value = p.player;
+      selectedPlayer = p.player;
+    }
+  });
+}
 
 // ==========================
-// Leaderboard table
+// Leaderboard table with ties
 // ==========================
 function populateLeaderboard() {
   leaderboardTable.innerHTML = "";
@@ -86,7 +93,6 @@ function populateLeaderboard() {
 
   sortedPool.forEach((p, index) => {
     const score = pointsByPlayer[p.player];
-    // Determine rank
     let rank;
     if (score === lastScore) {
       rank = lastRank; // tie
@@ -105,7 +111,6 @@ function populateLeaderboard() {
     leaderboardTable.appendChild(row);
   });
 }
-
 
 // ==========================
 // Player breakdown table
@@ -294,6 +299,7 @@ async function init() {
   for (const week of weekList) await fetchScores(week);
 
   calculateAllPoints();
+  populatePlayerDropdown(); // use filtered dropdown
   populatePlayerTable();
   drawLeaderboardChart();
 }
@@ -319,6 +325,7 @@ const groupToggleRadios = document.querySelectorAll('input[name="leaderboard-gro
 groupToggleRadios.forEach(radio => {
   radio.addEventListener("change", (e) => {
     showSmallGroup = e.target.value === "snap";
+    populatePlayerDropdown();   // rebuild filtered player dropdown
     populateLeaderboard();
     drawLeaderboardChart();
     populatePlayerTable();
