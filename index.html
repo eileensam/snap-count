@@ -8,33 +8,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<div id="bugnub-container"></div>
-<script>
-    // 1️⃣ Load EmailJS SDK first
-    const emailjsScript = document.createElement("script");
-    emailjsScript.src = "https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js";
-    emailjsScript.onload = () => {
 
-      // 2️⃣ Load bugnub markup
-      fetch("bugnub.html")
-        .then(res => res.text())
-        .then(html => {
-          document.getElementById("bugnub-container").innerHTML = html;
+<div id="header-container"></div>
+<script type="module">
+    import { highlightActiveNav, populateWeekInfo } from './header.js';
 
-          // 3️⃣ Load bugnub.js after markup is in
-          const bugnubJS = document.createElement("script");
-          bugnubJS.src = "bugnub.js";
-          document.body.appendChild(bugnubJS);
-        });
-    };
-    document.body.appendChild(emailjsScript);
+    fetch('header.html')
+      .then(res => res.text())
+      .then(async html => {
+        document.getElementById('header-container').innerHTML = html;
+
+        // Populate week/season in header
+        await populateWeekInfo();
+
+        // Highlight active page
+        const currentPage = window.location.pathname.split("/").pop().replace(".html","");
+        highlightActiveNav(currentPage);
+      });
 </script>
 
-<h1>Snap-Count</h1>
-<h3>NFL Pool</h3>
-
-<h4 id="current-week"></h4>
-<h4 id="season-type"></h4>
 
 <br>
 

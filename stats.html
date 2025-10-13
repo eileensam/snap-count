@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snap-Count Stats</title>
+    <link href="style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="header-container"></div>
+<script type="module">
+    import { highlightActiveNav, populateWeekInfo } from './header.js';
+
+    fetch('header.html')
+      .then(res => res.text())
+      .then(async html => {
+        document.getElementById('header-container').innerHTML = html;
+
+        // Populate week/season in header
+        await populateWeekInfo();
+
+        // Highlight active page
+        const currentPage = window.location.pathname.split("/").pop().replace(".html","");
+        highlightActiveNav(currentPage);
+      });
+</script>
+
+
+<div id="stats-container"></div>
+
+<script src="stats.js" type="module"></script>
+</body>
+</html>
