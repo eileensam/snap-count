@@ -41,7 +41,8 @@ async function fetchAllWeeks() {
                             opponent: away.team.name,
                             opponentScore: parseInt(away.score),
                             state: event.status.type.state,
-                            status: event.status.type.shortDetail
+                            status: event.status.type.shortDetail,
+                            date: event.date
                         },
                         {
                             team: away.team.name,
@@ -49,7 +50,8 @@ async function fetchAllWeeks() {
                             opponent: home.team.name,
                             opponentScore: parseInt(home.score),
                             state: event.status.type.state,
-                            status: event.status.type.shortDetail
+                            status: event.status.type.shortDetail,
+                            date: event.date
                         }
                     ];
                 });
@@ -90,11 +92,7 @@ function calculateTeamPoints() {
 // ==========================
 // Render stats sections
 // ==========================
-// ==========================
-// Render stats sections
-// ==========================
 function renderStats(pointsByTeam) {
-    // ---- Shared Calculations ----
     const roiByTeam = {};
     for (const [team, pts] of Object.entries(pointsByTeam)) {
         const teamObj = teamCosts.find(t => t.name === team);
@@ -107,7 +105,7 @@ function renderStats(pointsByTeam) {
     const topScorers = Object.entries(pointsByTeam).filter(([_, pts]) => pts === maxPoints);
 
     const hitterSection = document.createElement("section");
-    hitterSection.className = "stat-section";
+    hitterSection.className = "stat-card";
     hitterSection.innerHTML = `
         <h2 title="Calculated as sum of points each team earned across all weeks">
             Heaviest Hitter${topScorers.length > 1 ? 's' : ''}
@@ -121,7 +119,7 @@ function renderStats(pointsByTeam) {
     const mvtList = Object.entries(roiByTeam).filter(([_, roi]) => roi === highestRoi);
 
     const mvtSection = document.createElement("section");
-    mvtSection.className = "stat-section";
+    mvtSection.className = "stat-card";
     mvtSection.innerHTML = `
         <h2 title="Calculated as (total points ÷ cost)">
             Most Valuable Team${mvtList.length > 1 ? 's' : ''}
@@ -139,7 +137,7 @@ function renderStats(pointsByTeam) {
     const lvtList = Object.entries(roiByTeam).filter(([_, roi]) => roi === lowestRoi);
 
     const lvtSection = document.createElement("section");
-    lvtSection.className = "stat-section";
+    lvtSection.className = "stat-card";
     lvtSection.innerHTML = `
         <h2 title="Calculated as (total points ÷ cost)">
             Least Valuable Team${lvtList.length > 1 ? 's' : ''}
@@ -170,7 +168,6 @@ function renderStats(pointsByTeam) {
             } else if (game.score < game.opponentScore) {
                 winner = game.opponent;
                 loser = game.team;
-                // swap scores
                 [winnerScore, loserScore] = [loserScore, winnerScore];
             } else {
                 return; // skip ties
@@ -184,22 +181,22 @@ function renderStats(pointsByTeam) {
 
             if (disparity > maxDisparity) {
                 maxDisparity = disparity;
-                biggestUpset = { winner, loser, winnerScore, loserScore, disparity };
+                biggestUpset = { winner, loser, winnerScore, loserScore, disparity, date: game.date };
             }
         });
     });
 
     if (biggestUpset) {
         const upsetSection = document.createElement("section");
-        upsetSection.className = "stat-section";
+        upsetSection.className = "stat-card";
         upsetSection.innerHTML = `
             <h2>Biggest Upset by Cost</h2>
-            <p>${biggestUpset.winner} defeated ${biggestUpset.loser} — ${biggestUpset.winnerScore}-${biggestUpset.loserScore} (disparity: $${biggestUpset.disparity})</p>
+            <p>${biggestUpset.winner} defeated ${biggestUpset.loser} — ${biggestUpset.winnerScore}-${biggestUpset.loserScore}
+            (disparity: $${biggestUpset.disparity})</p>
         `;
         statsContainer.appendChild(upsetSection);
     }
 }
-
 
 // ==========================
 // Initialize stats page
