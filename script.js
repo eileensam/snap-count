@@ -205,7 +205,7 @@ function drawLeaderboardChart() {
 // ==========================
 // Initialize leaderboard page
 // ==========================
-async function initLeaderboard() {
+export async function initLeaderboard() {
   showLoading();
 
   // Make sure week info is populated in DOM if available
@@ -249,8 +249,6 @@ async function initLeaderboard() {
 
   hideLoading();
 }
-
-initLeaderboard();
 
 // ==========================
 // Event listeners
