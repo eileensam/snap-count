@@ -217,6 +217,7 @@ export async function initLeaderboard() {
       try {
         const resp = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?&week=${week}`);
         const data = await resp.json();
+
         totalGames[week] = data.events.flatMap(e => {
           const [home, away] = e.competitions[0].competitors;
           return [
@@ -234,43 +235,26 @@ export async function initLeaderboard() {
 
   // Populate week select dropdown
   weekSelect.innerHTML = "";
-  weekList.slice().sort((a, b) => b - a).forEach((w, idx) => {
+  weekList.slice().sort((a, b) => b - a).forEach((w) => {
     const opt = document.createElement("option");
     opt.value = w;
     opt.textContent = `Week ${w}`;
     weekSelect.appendChild(opt);
-    if (w === selectedWeek) weekSelect.value = w;
   });
+  weekSelect.value = selectedWeek;
 
-  calculateAllPoints();
-  populatePlayerDropdown();
-  populatePlayerTable();
-  drawLeaderboardChart();
+  // -------------------------
+  // Determine initial group toggle
+  // -------------------------
+  showSmallGroup = document.querySelector('input[name="leaderboard-group"]:checked').value === "snap";
+
+  // -------------------------
+  // Populate leaderboard and player data
+  // -------------------------
+  calculateAllPoints();          // fills pointsByPlayer and leaderboard table
+  populatePlayerDropdown();      // fills player select dropdown
+  populatePlayerTable();         // fills player breakdown table
+  drawLeaderboardChart();        // renders Chart.js graph
 
   hideLoading();
 }
-
-// ==========================
-// Event listeners
-// ==========================
-playerSelect.addEventListener("change", e => {
-  selectedPlayer = e.target.value;
-  populatePlayerTable();
-});
-
-weekSelect.addEventListener("change", e => {
-  selectedWeek = Number(e.target.value);
-  populatePlayerTable();
-  drawLeaderboardChart();
-});
-
-// Toggle group
-document.querySelectorAll('input[name="leaderboard-group"]').forEach(radio => {
-  radio.addEventListener("change", e => {
-    showSmallGroup = e.target.value === "snap";
-    populatePlayerDropdown();
-    populateLeaderboard();
-    drawLeaderboardChart();
-    populatePlayerTable();
-  });
-});
