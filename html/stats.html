@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Snap-Count Stats</title>
-    <link href="style.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div id="header-container"></div>
 <script type="module">
-    import { highlightActiveNav, populateWeekInfo } from './header.js';
+    import { highlightActiveNav, populateWeekInfo } from '../js/header.js';
 
     fetch('header.html')
       .then(res => res.text())
@@ -29,6 +29,6 @@
 
 <div id="stats-container"></div>
 
-<script src="stats.js" type="module"></script>
+<script src="../js/stats.js" type="module"></script>
 </body>
 </html>
