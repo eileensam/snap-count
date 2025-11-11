@@ -11,7 +11,7 @@
 
 <div id="header-container"></div>
 <script type="module">
-    import { highlightActiveNav, populateWeekInfo } from './header.js';
+    import { initHeader, highlightActiveNav } from './header.js';
     import { initLeaderboard } from './script.js';
 
     fetch('header.html')
@@ -19,20 +19,9 @@
       .then(async html => {
         document.getElementById('header-container').innerHTML = html;
 
-        // Populate week/season in header
-        await populateWeekInfo();
-
-        // Determine current page
-        let currentPage = window.location.pathname.split("/").pop().replace(".html","");
-        if (currentPage === "" || currentPage === "/") currentPage = "index";
-
-        // Highlight active nav link
-        highlightActiveNav(currentPage);
-
-        // If we’re on the leaderboard page, initialize it now
-        if (currentPage === "index") {
-          await initLeaderboard();
-        }
+        await initHeader();          // ensures state.currentWeek exists
+        highlightActiveNav("index");
+        await initLeaderboard();     // now safe to load data
       });
 </script>
 
@@ -114,6 +103,5 @@
         NFL MVP favorite</a> after the Patriots' victory over the Buccs?
 </div>
 
-<script src="script.js" type="module"></script>
 </body>
 </html>

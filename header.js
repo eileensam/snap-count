@@ -1,56 +1,60 @@
+// header.js
+import { state, saveStateToLocalStorage } from './state.js';
+
 // ==========================
-// Fetch week info and store
+// Fetch week info and store in state
 // ==========================
 export async function fetchAndStoreWeek() {
-    try {
-        const res = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
-        const data = await res.json();
+  try {
+    const res = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
+    const data = await res.json();
 
-        const week = data.week.number;
-        const season = data.leagues[0].season.type.name;
+    const week = data.week.number;
+    const seasonType = data.leagues[0].season.type.name;
 
-        localStorage.setItem("currentWeek", week);
-        localStorage.setItem("seasonType", season);
+    // Update state
+    state.currentWeek = week;
+    state.seasonType = seasonType;
+    state.selectedWeek = week;
 
-        return { week, season };
-    } catch (err) {
-        console.error("Error fetching week:", err);
-        return null;
-    }
+    // Persist to localStorage
+    saveStateToLocalStorage();
+
+    return { week, seasonType };
+  } catch (err) {
+    console.error("Error fetching week:", err);
+    return null;
+  }
 }
 
 // ==========================
-// Populate week info in DOM if present
+// Populate week info in DOM
 // ==========================
 export function populateWeekInfo() {
-    const currentWeekEl = document.getElementById("current-week");
-    const seasonTypeEl = document.getElementById("season-type");
+  const currentWeekEl = document.getElementById("current-week");
+  const seasonTypeEl = document.getElementById("season-type");
 
-    const savedWeek = localStorage.getItem("currentWeek");
-    const savedSeason = localStorage.getItem("seasonType");
-
-    if (!savedWeek || !savedSeason) return;
-
-    if (currentWeekEl) currentWeekEl.textContent = `Week ${savedWeek}`;
-    if (seasonTypeEl) seasonTypeEl.textContent = savedSeason;
+  if (state.currentWeek && currentWeekEl)
+    currentWeekEl.textContent = `Week ${state.currentWeek}`;
+  if (state.seasonType && seasonTypeEl)
+    seasonTypeEl.textContent = state.seasonType;
 }
 
 // ==========================
 // Highlight active nav link
 // ==========================
 export function highlightActiveNav(page) {
-    document.querySelectorAll(".nav-link").forEach(link => {
-        link.classList.toggle("active", link.dataset.page === page);
-    });
+  document.querySelectorAll(".nav-link").forEach(link => {
+    link.classList.toggle("active", link.dataset.page === page);
+  });
 }
 
 // ==========================
-// Initialize header on DOM load
+// Initialize header (called externally, not auto)
 // ==========================
-document.addEventListener("DOMContentLoaded", async () => {
-    // Only fetch if not in localStorage
-    if (!localStorage.getItem("currentWeek") || !localStorage.getItem("seasonType")) {
-        await fetchAndStoreWeek();
-    }
-    populateWeekInfo();
-});
+export async function initHeader() {
+  if (!state.currentWeek || !state.seasonType) {
+    await fetchAndStoreWeek();
+  }
+  populateWeekInfo();
+}
