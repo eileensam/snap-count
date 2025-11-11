@@ -10,17 +10,14 @@
 
 <div id="header-container"></div>
 <script type="module">
-    import { highlightActiveNav, populateWeekInfo } from '../js/header.js';
+    import { initHeader, highlightActiveNav } from '../js/header.js';
 
     fetch('header.html')
       .then(res => res.text())
       .then(async html => {
         document.getElementById('header-container').innerHTML = html;
 
-        // Populate week/season in header
-        await populateWeekInfo();
-
-        // Highlight active page
+        await initHeader(); // <-- ensures currentWeek + seasonType are fetched + rendered
         const currentPage = window.location.pathname.split("/").pop().replace(".html","");
         highlightActiveNav(currentPage);
       });
