@@ -258,3 +258,28 @@ export async function initLeaderboard() {
 
   hideLoading();
 }
+
+// ==========================
+// Event listeners
+// ==========================
+playerSelect.addEventListener("change", e => {
+  selectedPlayer = e.target.value;
+  populatePlayerTable();
+});
+
+weekSelect.addEventListener("change", e => {
+  selectedWeek = Number(e.target.value);
+  populatePlayerTable();
+  drawLeaderboardChart();
+});
+
+// Toggle group
+document.querySelectorAll('input[name="leaderboard-group"]').forEach(radio => {
+  radio.addEventListener("change", e => {
+    showSmallGroup = e.target.value === "snap";
+    populatePlayerDropdown();
+    populateLeaderboard();
+    drawLeaderboardChart();
+    populatePlayerTable();
+  });
+});
