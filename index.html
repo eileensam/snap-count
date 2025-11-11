@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Snap-Count</title>
-    <link href="../css/style.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -11,10 +11,10 @@
 
 <div id="header-container"></div>
 <script type="module">
-    import { initHeader, highlightActiveNav } from '../js/header.js';
-    import { initLeaderboard } from '../js/script.js';
+    import { initHeader, highlightActiveNav } from './js/header.js';
+    import { initLeaderboard } from './js/script.js';
 
-    fetch('header.html')
+    fetch('./html/header.html')
       .then(res => res.text())
       .then(async html => {
         document.getElementById('header-container').innerHTML = html;
