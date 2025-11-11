@@ -14,7 +14,7 @@
     import { initHeader, highlightActiveNav } from './js/header.js';
     import { initLeaderboard } from './js/script.js';
 
-    fetch('./html/header.html')
+    fetch('./header.html')
       .then(res => res.text())
       .then(async html => {
         document.getElementById('header-container').innerHTML = html;
