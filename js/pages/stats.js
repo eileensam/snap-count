@@ -1,20 +1,40 @@
 import { pool, teamCosts, pointsBySeason } from '../core/statics.js';
-import { fetchCurrentWeekInfo, fetchWeekGames } from '../core/api.js';
+import { fetchCurrentWeekInfo, fetchWeekGames, teamLogos } from '../core/api.js';
 
 const statsContainer = document.getElementById("stats-container");
 
+// ==========================
 // State storage
+// ==========================
 let totalGames = JSON.parse(localStorage.getItem("totalGames") || "{}");
 let currentWeek = Number(localStorage.getItem("currentWeek")) || null;
 let seasonType = localStorage.getItem("seasonType") || null;
 
-// --------------------
+// ==========================
+// Helper: create stat box
+// ==========================
+function createStatBox({ title, subtitle, content, logo }) {
+    const section = document.createElement("section");
+    section.className = "stat-card";
+    section.innerHTML = `
+        <div class="stat-header">
+            ${logo ? `<img src="${logo}" class="stat-logo" alt="${title} logo">` : ""}
+            <div class="stat-header-text">
+                <h2 class="stat-title">${title}</h2>
+                ${subtitle ? `<p class="stat-subtitle">${subtitle}</p>` : ""}
+            </div>
+        </div>
+        <div class="stat-content">${content}</div>
+    `;
+    statsContainer.appendChild(section);
+}
+
+// ==========================
 // Fetch all weeks using api.js
-// --------------------
+// ==========================
 async function fetchAllWeeks() {
     if (currentWeek && Object.keys(totalGames).length >= currentWeek) return;
 
-    // 1️⃣ Fetch current week info
     const info = await fetchCurrentWeekInfo();
     if (info) {
         currentWeek = info.currentWeek;
@@ -24,7 +44,6 @@ async function fetchAllWeeks() {
         localStorage.setItem("seasonType", seasonType);
     }
 
-    // 2️⃣ Fetch all weeks
     for (let week = 1; week <= currentWeek; week++) {
         if (!totalGames[week]) {
             totalGames[week] = await fetchWeekGames(week);
@@ -34,9 +53,9 @@ async function fetchAllWeeks() {
     localStorage.setItem("totalGames", JSON.stringify(totalGames));
 }
 
-// --------------------
+// ==========================
 // Calculate cumulative team points
-// --------------------
+// ==========================
 function calculateTeamPoints() {
     const pointsByTeam = {};
     teamCosts.forEach(tc => pointsByTeam[tc.name] = 0);
@@ -55,9 +74,9 @@ function calculateTeamPoints() {
     return pointsByTeam;
 }
 
-// --------------------
+// ==========================
 // Render stats
-// --------------------
+// ==========================
 function renderStats(pointsByTeam) {
     statsContainer.innerHTML = ""; // clear previous content
 
@@ -68,41 +87,83 @@ function renderStats(pointsByTeam) {
         roiByTeam[team] = pts / teamObj.cost;
     }
 
-    // Heaviest Hitter
-    const maxPoints = Math.max(...Object.values(pointsByTeam));
-    const topScorers = Object.entries(pointsByTeam).filter(([_, pts]) => pts === maxPoints);
-
-    const hitterSection = document.createElement("section");
-    hitterSection.className = "stat-card";
-    hitterSection.innerHTML = `
-        <h2 title="Sum of points each team earned across all weeks">
-            Heaviest Hitter${topScorers.length > 1 ? 's' : ''}
-        </h2>
-        ${topScorers.map(([team, pts]) => `<p>${team} — ${pts} points</p>`).join('')}
-    `;
-    statsContainer.appendChild(hitterSection);
-
-    // Most/Least Valuable Teams
-    const highestRoi = Math.max(...Object.values(roiByTeam));
-    const lowestRoi = Math.min(...Object.values(roiByTeam));
-
-    const renderRoiSection = (title, list) => {
+    // Helper to render a stat card
+    function createStatCard(title, subtitle, teams) {
         const section = document.createElement("section");
         section.className = "stat-card";
         section.innerHTML = `
             <h2>${title}</h2>
-            ${list.map(([team, roi]) => {
-                const teamObj = teamCosts.find(t => t.name === team);
-                return `<p>${team} — ${pointsByTeam[team]} points, cost $${teamObj.cost} → value ${roi.toFixed(2)}</p>`;
-            }).join('')}
+            <p class="stat-subtitle">${subtitle}</p>
         `;
+
+        const listContainer = document.createElement("div");
+        listContainer.className = "team-list";
+
+        teams.forEach(team => {
+            const logoUrl = team.logo || teamLogos[team.name] || "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/car.png";
+
+            const row = document.createElement("div");
+            row.className = "team-row";
+            row.innerHTML = `
+                <img src="${logoUrl}" class="team-logo" alt="${team.name} logo">
+                <div class="team-info">
+                    <p class="team-name">${team.name}</p>
+                    <p class="team-stats">${team.stats}</p>
+                </div>
+            `;
+            listContainer.appendChild(row);
+        });
+
+        section.appendChild(listContainer);
         statsContainer.appendChild(section);
-    };
+    }
 
-    renderRoiSection("Most Valuable Team", Object.entries(roiByTeam).filter(([_, roi]) => roi === highestRoi));
-    renderRoiSection("Least Valuable Team", Object.entries(roiByTeam).filter(([_, roi]) => roi === lowestRoi));
+    // --------------------
+    // Heaviest Hitter
+    // --------------------
+    const maxPoints = Math.max(...Object.values(pointsByTeam));
+    const topScorers = Object.entries(pointsByTeam)
+        .filter(([_, pts]) => pts === maxPoints)
+        .map(([team, pts]) => ({
+            name: team,
+            stats: `${pts} points`,
+            logo: teamLogos[team] // uses dictionary
+        }));
 
+    createStatCard(
+        `Heaviest Hitter${topScorers.length > 1 ? 's' : ''}`,
+        "Sum of points each team earned across all weeks",
+        topScorers
+    );
+
+    // --------------------
+    // Most Valuable / Least Valuable
+    // --------------------
+    const highestRoi = Math.max(...Object.values(roiByTeam));
+    const lowestRoi = Math.min(...Object.values(roiByTeam));
+
+    const mvtList = Object.entries(roiByTeam)
+        .filter(([_, roi]) => roi === highestRoi)
+        .map(([team, roi]) => ({
+            name: team,
+            stats: `${pointsByTeam[team]} points, value ${roi.toFixed(2)}`,
+            logo: teamLogos[team]
+        }));
+
+    const lvtList = Object.entries(roiByTeam)
+        .filter(([_, roi]) => roi === lowestRoi)
+        .map(([team, roi]) => ({
+            name: team,
+            stats: `${pointsByTeam[team]} points, value ${roi.toFixed(2)}`,
+            logo: teamLogos[team]
+        }));
+
+    createStatCard("Most Valuable Team", "Calculated as (total points ÷ cost)", mvtList);
+    createStatCard("Least Valuable Team", "Calculated as (total points ÷ cost)", lvtList);
+
+    // --------------------
     // Biggest Upset by Cost
+    // --------------------
     let biggestUpset = null;
     let maxDisparity = -Infinity;
 
@@ -110,9 +171,7 @@ function renderStats(pointsByTeam) {
         games.forEach(game => {
             if (game.state !== "post") return;
 
-            let winner, loser;
-            let winnerScore = game.score;
-            let loserScore = game.opponentScore;
+            let winner, loser, winnerScore = game.score, loserScore = game.opponentScore;
 
             if (game.score > game.opponentScore) {
                 winner = game.team; loser = game.opponent;
@@ -128,26 +187,34 @@ function renderStats(pointsByTeam) {
             const disparity = loserObj.cost - winnerObj.cost;
             if (disparity > maxDisparity) {
                 maxDisparity = disparity;
-                biggestUpset = { winner, loser, winnerScore, loserScore, disparity };
+                biggestUpset = {
+                    winner,
+                    loser,
+                    winnerScore,
+                    loserScore,
+                    disparity,
+                    logo: teamLogos[winner]
+                };
             }
         });
     });
 
     if (biggestUpset) {
-        const upsetSection = document.createElement("section");
-        upsetSection.className = "stat-card";
-        upsetSection.innerHTML = `
-            <h2>Biggest Upset by Cost</h2>
-            <p>${biggestUpset.winner} defeated ${biggestUpset.loser} — ${biggestUpset.winnerScore}-${biggestUpset.loserScore}
-            (disparity: $${biggestUpset.disparity})</p>
-        `;
-        statsContainer.appendChild(upsetSection);
+        createStatCard(
+            "Biggest Upset by Cost",
+            "Largest disparity in team cost where the underdog won",
+            [{
+                name: `${biggestUpset.winner} defeated ${biggestUpset.loser}`,
+                stats: `${biggestUpset.winnerScore}-${biggestUpset.loserScore} (disparity: $${biggestUpset.disparity})`,
+                logo: biggestUpset.logo
+            }]
+        );
     }
 }
 
-// --------------------
+// ==========================
 // Initialize stats page
-// --------------------
+// ==========================
 async function initStats() {
     await fetchAllWeeks();
     const pointsByTeam = calculateTeamPoints();

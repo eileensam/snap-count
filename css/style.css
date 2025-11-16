@@ -169,3 +169,38 @@ h4 {
 .info-icon {
     cursor: pointer;
 }
+
+/* =========================
+   Team Rows for Stats Cards
+========================= */
+
+.team-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.team-logo {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 6px;
+}
+
+.team-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.team-info .team-name {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #FFD700;
+}
+
+.team-info .team-stats {
+    font-size: 0.85rem;
+    color: #00FF00; /* bright green subtitle for contrast */
+    margin-top: 2px;
+}

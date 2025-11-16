@@ -1,4 +1,7 @@
 // core/api.js
+
+export const teamLogos = {}
+
 export async function fetchWeekGames(week) {
   try {
     const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${week}`;
@@ -8,6 +11,11 @@ export async function fetchWeekGames(week) {
 
     return data.events.flatMap(event => {
       const [home, away] = event.competitions[0].competitors;
+
+      teamLogos[home.team.name] = home.team.logo
+      teamLogos[away.team.name] = away.team.logo
+
+
       return [
         {
           team: home.team.name,
