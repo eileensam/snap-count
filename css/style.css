@@ -204,3 +204,12 @@ h4 {
     color: #00FF00; /* bright green subtitle for contrast */
     margin-top: 2px;
 }
+
+.team-cell-logo {
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+

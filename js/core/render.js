@@ -1,5 +1,6 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players } from './statics.js'; // your static data
+import { pool, pointsBySeason, players } from './statics.js';
+import { teamLogos } from './api.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -116,9 +117,20 @@ export function renderPlayerBreakdown() {
 
     const opponent = game.opponent ?? "N/A";
     const winner = game.score >= game.opponentScore ? game.team : game.opponent;
-    const fullScore = game.state === "pre"
-      ? game.status
-      : `${game.score}-${game.opponentScore}${game.score !== game.opponentScore ? " " + winner : ""}`;
+    const fullScore = (() => {
+      if (game.state === "pre") return game.status;
+
+      let scoreText = `${game.score}-${game.opponentScore}`;
+
+      if (game.score !== game.opponentScore) {
+        const winnerTeam = game.score > game.opponentScore ? game.team : game.opponent;
+        const winnerLogo = teamLogos[winnerTeam] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+        scoreText += ` <img src="${winnerLogo}" class="team-cell-logo" alt="${winnerTeam} logo"> ${winnerTeam}`;
+      }
+
+      return scoreText;
+    })();
+
 
     let result = "?";
     let points = "?";
@@ -128,8 +140,17 @@ export function renderPlayerBreakdown() {
       else { result = "T"; points = 0.5 * pointsBySeason[state.seasonType]; }
     }
 
+    const teamLogo = teamLogos[team] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+    const opponentLogo = teamLogos[opponent] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+
     const row = document.createElement("tr");
-    row.innerHTML = `<td>${team}</td><td>${opponent}</td><td>${fullScore}</td><td>${result}</td><td>${points}</td>`;
+    row.innerHTML = `
+      <td><img src="${teamLogo}" class="team-cell-logo" alt="${team} logo"> ${team}</td>
+      <td><img src="${opponentLogo}" class="team-cell-logo" alt="${opponent} logo"> ${opponent}</td>
+      <td>${fullScore}</td>
+      <td>${result}</td>
+      <td>${points}</td>
+    `;
 
     if (result === "W") row.cells[3].style.color = "green";
     if (result === "L") row.cells[3].style.color = "red";
