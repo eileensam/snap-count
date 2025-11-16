@@ -10,7 +10,7 @@
 
 <div id="header-container"></div>
 <script type="module">
-    import { initHeader, highlightActiveNav } from './js/header.js';
+    import { initHeader, highlightActiveNav } from './js/core/header.js';
 
     fetch('header.html')
       .then(res => res.text())
@@ -26,6 +26,6 @@
 
 <div id="stats-container"></div>
 
-<script src="js/stats.js" type="module"></script>
+<script src="js/pages/stats.js" type="module"></script>
 </body>
 </html>

@@ -3,37 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>Snap-Count</title>
+
+    <!-- Styles -->
     <link href="css/style.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Page entrypoint -->
+    <script src="js/pages/index.js" type="module"></script>
 </head>
 <body>
 
 <div id="header-container"></div>
-<script type="module">
-    import { initHeader, highlightActiveNav } from './js/header.js';
-    import { initLeaderboard } from './js/script.js';
-
-    fetch('./header.html')
-      .then(res => res.text())
-      .then(async html => {
-        document.getElementById('header-container').innerHTML = html;
-
-        await initHeader();          // ensures state.currentWeek exists
-        highlightActiveNav("index");
-        await initLeaderboard();     // now safe to load data
-      });
-</script>
 
 <br>
 
-<!-- Global Group Toggle -->
-<div id="group-toggle" style="margin: 10px 0;">
+<!-- Group Toggle -->
+<div class="group-toggle" id="group-toggle">
     <label>
         <input checked name="leaderboard-group" type="radio" value="snap">
         Small Group
     </label>
-    <label style="margin-left: 10px;">
+    <label>
         <input name="leaderboard-group" type="radio" value="all">
         Full League
     </label>
@@ -52,13 +45,11 @@
             <th>Total Points</th>
         </tr>
         </thead>
-        <tbody>
-        <!-- JS will populate this -->
-        </tbody>
+        <tbody></tbody>
     </table>
 </section>
 
-<!-- Leaderboard Graph -->
+<!-- Leaderboard Chart -->
 <section id="leaderboard-graph">
     <canvas id="leaderboardChart"></canvas>
 </section>
@@ -68,15 +59,12 @@
 <!-- Player Breakdown -->
 <section id="player-breakdown">
     <h2>Player Breakdown</h2>
+
     <label for="player-select">Select Player:</label>
-    <select id="player-select">
-        <!-- JS will populate this -->
-    </select>
+    <select id="player-select"></select>
 
     <label for="week-select">Select Week:</label>
-    <select id="week-select">
-        <!-- JS will populate this -->
-    </select>
+    <select id="week-select"></select>
 
     <table id="player-table">
         <thead>
@@ -88,9 +76,7 @@
             <th>Points</th>
         </tr>
         </thead>
-        <tbody>
-        <!-- JS will populate this -->
-        </tbody>
+        <tbody></tbody>
     </table>
 </section>
 
@@ -100,7 +86,8 @@
     Would you believe me if I said that Drake Maye became the
     <a href="https://www.espn.com/espn/betting/story/_/id/46909432/nfl-betting-week-10-afc-east-drake-maye-jets-bills-dolphins"
        rel="noopener noreferrer" target="_blank">
-        NFL MVP favorite</a> after the Patriots' victory over the Buccs?
+        NFL MVP favorite
+    </a> after the Patriots' victory over the Buccs?
 </div>
 
 </body>
