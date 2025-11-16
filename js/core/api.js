@@ -1,4 +1,5 @@
 // core/api.js
+import { state, saveState } from './state.js';
 
 export const teamLogos = {}
 
@@ -12,8 +13,12 @@ export async function fetchWeekGames(week) {
     return data.events.flatMap(event => {
       const [home, away] = event.competitions[0].competitors;
 
-      teamLogos[home.team.name] = home.team.logo
-      teamLogos[away.team.name] = away.team.logo
+      // update team logos in state
+      state.teamLogos[home.team.name] = home.team.logo;
+      state.teamLogos[away.team.name] = away.team.logo;
+
+      // persist logos immediately
+      saveState();
 
 
       return [

@@ -1,5 +1,6 @@
 import { pool, teamCosts, pointsBySeason } from '../core/statics.js';
-import { fetchCurrentWeekInfo, fetchWeekGames, teamLogos } from '../core/api.js';
+import { fetchCurrentWeekInfo, fetchWeekGames } from '../core/api.js';
+import { state } from '../core/state.js';
 
 const statsContainer = document.getElementById("stats-container");
 
@@ -100,7 +101,7 @@ function renderStats(pointsByTeam) {
         listContainer.className = "team-list";
 
         teams.forEach(team => {
-            const logoUrl = team.logo || teamLogos[team.name] || "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/car.png";
+            const logoUrl = team.logo || state.teamLogos[team.name] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
 
             const row = document.createElement("div");
             row.className = "team-row";
@@ -127,7 +128,7 @@ function renderStats(pointsByTeam) {
         .map(([team, pts]) => ({
             name: team,
             stats: `${pts} points`,
-            logo: teamLogos[team] // uses dictionary
+            logo: state.teamLogos[team] // uses dictionary
         }));
 
     createStatCard(
@@ -147,7 +148,7 @@ function renderStats(pointsByTeam) {
         .map(([team, roi]) => ({
             name: team,
             stats: `${pointsByTeam[team]} points, value ${roi.toFixed(2)}`,
-            logo: teamLogos[team]
+            logo: state.teamLogos[team]
         }));
 
     const lvtList = Object.entries(roiByTeam)
@@ -155,7 +156,7 @@ function renderStats(pointsByTeam) {
         .map(([team, roi]) => ({
             name: team,
             stats: `${pointsByTeam[team]} points, value ${roi.toFixed(2)}`,
-            logo: teamLogos[team]
+            logo: state.teamLogos[team]
         }));
 
     createStatCard("Most Valuable Team", "Calculated as (total points ÷ cost)", mvtList);
@@ -193,7 +194,7 @@ function renderStats(pointsByTeam) {
                     winnerScore,
                     loserScore,
                     disparity,
-                    logo: teamLogos[winner]
+                    logo: state.teamLogos[winner]
                 };
             }
         });

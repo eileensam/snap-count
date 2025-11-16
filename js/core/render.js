@@ -1,6 +1,5 @@
 import { state } from './state.js';
 import { pool, pointsBySeason, players } from './statics.js';
-import { teamLogos } from './api.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -124,7 +123,7 @@ export function renderPlayerBreakdown() {
 
       if (game.score !== game.opponentScore) {
         const winnerTeam = game.score > game.opponentScore ? game.team : game.opponent;
-        const winnerLogo = teamLogos[winnerTeam] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+        const winnerLogo = state.teamLogos[winnerTeam] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
         scoreText += ` <img src="${winnerLogo}" class="team-cell-logo" alt="${winnerTeam} logo"> ${winnerTeam}`;
       }
 
@@ -140,8 +139,8 @@ export function renderPlayerBreakdown() {
       else { result = "T"; points = 0.5 * pointsBySeason[state.seasonType]; }
     }
 
-    const teamLogo = teamLogos[team] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
-    const opponentLogo = teamLogos[opponent] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+    const teamLogo = state.teamLogos[team] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+    const opponentLogo = state.teamLogos[opponent] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
 
     const row = document.createElement("tr");
     row.innerHTML = `
