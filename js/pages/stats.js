@@ -12,23 +12,38 @@ let currentWeek = Number(localStorage.getItem("currentWeek")) || null;
 let seasonType = localStorage.getItem("seasonType") || null;
 
 // ==========================
-// Helper: create stat box
+// Helper: create stat card
 // ==========================
-function createStatBox({ title, subtitle, content, logo }) {
+function createStatCard(title, subtitle, teams) {
     const section = document.createElement("section");
     section.className = "stat-card";
     section.innerHTML = `
-        <div class="stat-header">
-            ${logo ? `<img src="${logo}" class="stat-logo" alt="${title} logo">` : ""}
-            <div class="stat-header-text">
-                <h2 class="stat-title">${title}</h2>
-                ${subtitle ? `<p class="stat-subtitle">${subtitle}</p>` : ""}
-            </div>
-        </div>
-        <div class="stat-content">${content}</div>
+        <h2>${title}</h2>
+        <p class="stat-subtitle">${subtitle}</p>
     `;
+
+    const listContainer = document.createElement("div");
+    listContainer.className = "team-list";
+
+    teams.forEach(team => {
+        const logoUrl = team.logo || state.teamLogos[team.name] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+
+        const row = document.createElement("div");
+        row.className = "team-row";
+        row.innerHTML = `
+            <img src="${logoUrl}" class="team-logo" alt="${team.name} logo">
+            <div class="team-info">
+                <p class="team-name">${team.name}</p>
+                <p class="team-stats">${team.stats}</p>
+            </div>
+        `;
+        listContainer.appendChild(row);
+    });
+
+    section.appendChild(listContainer);
     statsContainer.appendChild(section);
 }
+
 
 // ==========================
 // Fetch all weeks using api.js
@@ -75,60 +90,17 @@ function calculateTeamPoints() {
     return pointsByTeam;
 }
 
-// ==========================
-// Render stats
-// ==========================
-function renderStats(pointsByTeam) {
-    statsContainer.innerHTML = ""; // clear previous content
-
-    const roiByTeam = {};
-    for (const [team, pts] of Object.entries(pointsByTeam)) {
-        const teamObj = teamCosts.find(t => t.name === team);
-        if (!teamObj) continue;
-        roiByTeam[team] = pts / teamObj.cost;
-    }
-
-    // Helper to render a stat card
-    function createStatCard(title, subtitle, teams) {
-        const section = document.createElement("section");
-        section.className = "stat-card";
-        section.innerHTML = `
-            <h2>${title}</h2>
-            <p class="stat-subtitle">${subtitle}</p>
-        `;
-
-        const listContainer = document.createElement("div");
-        listContainer.className = "team-list";
-
-        teams.forEach(team => {
-            const logoUrl = team.logo || state.teamLogos[team.name] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
-
-            const row = document.createElement("div");
-            row.className = "team-row";
-            row.innerHTML = `
-                <img src="${logoUrl}" class="team-logo" alt="${team.name} logo">
-                <div class="team-info">
-                    <p class="team-name">${team.name}</p>
-                    <p class="team-stats">${team.stats}</p>
-                </div>
-            `;
-            listContainer.appendChild(row);
-        });
-
-        section.appendChild(listContainer);
-        statsContainer.appendChild(section);
-    }
-
-    // --------------------
-    // Heaviest Hitter
-    // --------------------
+// --------------------
+// Heaviest Hitter
+// --------------------
+function renderHeaviestHitter(pointsByTeam) {
     const maxPoints = Math.max(...Object.values(pointsByTeam));
     const topScorers = Object.entries(pointsByTeam)
         .filter(([_, pts]) => pts === maxPoints)
         .map(([team, pts]) => ({
             name: team,
             stats: `${pts} points`,
-            logo: state.teamLogos[team] // uses dictionary
+            logo: state.teamLogos[team]
         }));
 
     createStatCard(
@@ -136,10 +108,19 @@ function renderStats(pointsByTeam) {
         "Sum of points each team earned across all weeks",
         topScorers
     );
+}
 
-    // --------------------
-    // Most Valuable / Least Valuable
-    // --------------------
+// --------------------
+// Most / Least Valuable
+// --------------------
+function renderValueStats(pointsByTeam) {
+    const roiByTeam = {};
+    for (const [team, pts] of Object.entries(pointsByTeam)) {
+        const teamObj = teamCosts.find(t => t.name === team);
+        if (!teamObj) continue;
+        roiByTeam[team] = pts / teamObj.cost;
+    }
+
     const highestRoi = Math.max(...Object.values(roiByTeam));
     const lowestRoi = Math.min(...Object.values(roiByTeam));
 
@@ -161,10 +142,12 @@ function renderStats(pointsByTeam) {
 
     createStatCard("Most Valuable Team", "Calculated as (total points ÷ cost)", mvtList);
     createStatCard("Least Valuable Team", "Calculated as (total points ÷ cost)", lvtList);
+}
 
-    // --------------------
-    // Biggest Upset by Cost
-    // --------------------
+// --------------------
+// Biggest Upset
+// --------------------
+function renderBiggestUpset() {
     let biggestUpset = null;
     let maxDisparity = -Infinity;
 
@@ -211,6 +194,73 @@ function renderStats(pointsByTeam) {
             }]
         );
     }
+}
+
+// --------------------
+// Perfect Lineup
+// --------------------
+function renderPerfectLineup(pointsByTeam) {
+    const budget = 250;
+
+    const teamList = teamCosts.map(tc => ({
+        name: tc.name,
+        cost: tc.cost,
+        points: pointsByTeam[tc.name] || 0,
+        logo: state.teamLogos[tc.name]
+    }));
+
+    // Recursive helper to find the best combination
+    function findBestLineup(teamList, budget) {
+        let bestCombo = [];
+        let bestPoints = -Infinity;
+
+        function helper(idx, currentCombo, totalCost, totalPoints) {
+            if (totalCost > budget) return;
+            if (totalPoints > bestPoints) {
+                bestPoints = totalPoints;
+                bestCombo = currentCombo.slice();
+            }
+            if (idx === teamList.length) return;
+
+            // Include team[idx]
+            currentCombo.push(teamList[idx]);
+            helper(idx + 1, currentCombo, totalCost + teamList[idx].cost, totalPoints + teamList[idx].points);
+            currentCombo.pop();
+
+            // Exclude team[idx]
+            helper(idx + 1, currentCombo, totalCost, totalPoints);
+        }
+
+        helper(0, [], 0, 0);
+        return { bestCombo, bestPoints };
+    }
+
+    const { bestCombo, bestPoints } = findBestLineup(teamList, budget);
+    const totalCost = bestCombo.reduce((sum, team) => sum + team.cost, 0);
+
+    createStatCard(
+        "Perfect Lineup",
+        `Best combination of teams in $${budget} budget<br>${bestPoints} points total, $${totalCost} cost`,
+        bestCombo.map(team => ({
+            name: team.name,
+            stats: `${team.points} points — $${team.cost}`,
+            logo: team.logo
+        }))
+    );
+}
+
+
+
+// ==========================
+// Render stats
+// ==========================
+function renderStats(pointsByTeam) {
+    statsContainer.innerHTML = ""; // clear previous content
+
+    renderPerfectLineup(pointsByTeam);
+    renderHeaviestHitter(pointsByTeam);
+    renderValueStats(pointsByTeam);
+    renderBiggestUpset();
 }
 
 // ==========================
