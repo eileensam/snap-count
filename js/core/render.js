@@ -11,6 +11,61 @@ const leaderboardCanvas = document.getElementById("leaderboardChart");
 let leaderboardChart = null;
 
 // ===============================
+// Helper: Get player's cumulative points
+// ===============================
+function getCumulativePoints(playerObj, upToWeek) {
+  let total = 0;
+  for (let w = 1; w <= upToWeek; w++) {
+    const games = state.totalGames[w] || [];
+    playerObj.teamList.forEach(team => {
+      const game = games.find(g => g.team === team);
+      if (!game || game.state !== "post") return;
+
+      const pts = game.score > game.opponentScore
+        ? pointsBySeason[state.seasonType]
+        : game.score === game.opponentScore
+          ? 0.5 * pointsBySeason[state.seasonType]
+          : 0;
+
+      total += pts;
+    });
+  }
+  return total;
+}
+
+// ===============================
+// Helper: Get player's previous rank
+// ===============================
+function getLastWeekRanks() {
+  if (state.selectedWeek <= 1) return {}; // first week, no movement
+
+  const ranks = {};
+  const filtered = pool.filter(p => state.showSmallGroup ? p.inSnapCount : true);
+
+  // calculate points last week
+  const pointsByPlayer = {};
+  filtered.forEach(p => {
+    pointsByPlayer[p.player] = getCumulativePoints(p, state.selectedWeek - 1);
+  });
+
+  // sort descending
+  const sorted = filtered.sort((a, b) => pointsByPlayer[b.player] - pointsByPlayer[a.player]);
+
+  let lastScore = null;
+  let lastRank = 0;
+
+  sorted.forEach((p, idx) => {
+    const score = pointsByPlayer[p.player];
+    let rank = score === lastScore ? lastRank : idx + 1;
+    if (rank !== lastRank) lastRank = rank;
+    lastScore = score;
+    ranks[p.player] = rank;
+  });
+
+  return ranks;
+}
+
+// ===============================
 // Leaderboard table with ties
 // ===============================
 
@@ -46,14 +101,32 @@ export function renderLeaderboardTable() {
   let lastScore = null;
   let lastRank = 0;
 
+  const lastWeekRanks = getLastWeekRanks();
+
   sorted.forEach((p, idx) => {
     const score = pointsByPlayer[p.player];
     let rank = score === lastScore ? lastRank : idx + 1;
     if (rank !== lastRank) lastRank = rank;
     lastScore = score;
 
+    // Movement relative to last week
+    const prevRank = lastWeekRanks[p.player] ?? rank;
+    let movement = "-";
+    const diff = prevRank - rank;
+    if (diff > 0) movement = `+${diff}`;
+    else if (diff < 0) movement = `${diff}`;
+
     const row = document.createElement("tr");
-    row.innerHTML = `<td>${rank}</td><td>${p.player}</td><td>${score}</td>`;
+    row.innerHTML = `
+      <td>${rank}</td>
+      <td>${p.player}</td>
+      <td>${score}</td>
+      <td>${movement}</td>
+    `;
+
+    if (movement.startsWith("+")) row.cells[3].style.color = "green";
+    if (movement.startsWith("-") && diff < 0) row.cells[3].style.color = "red";
+
     leaderboardTable.appendChild(row);
   });
 }
