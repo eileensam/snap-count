@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, POST, DASH, PLUS, GREEN, RED } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, PRE, POST, DASH, PLUS, GREEN, RED } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -191,7 +191,7 @@ export function renderPlayerBreakdown() {
 
     // Determine score display
     const fullScore = (() => {
-      if (game.state === "pre") return game.status;
+      if (game.state === PRE) return game.status;
 
       let scoreText = `${game.score}-${game.opponentScore}`;
 
@@ -218,7 +218,7 @@ export function renderPlayerBreakdown() {
     let wpDisplay = DASH;
     if (game.state === POST) {
       wpDisplay = DASH; // final
-    } else if (game.state === "pre") {
+    } else if (game.state === PRE) {
       // TODO: calculate via odds if available
       wpDisplay = DASH;
     } else if (game.state === "in") {
