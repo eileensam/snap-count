@@ -245,11 +245,14 @@ export const teamCosts = [
 
 // Constants
 export const NFL_LOGO = "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png"
-export const DASH = "-"
-export const PLUS = "+"
-export const N_A = "N/A"
-export const QUESTION_MARK = "?"
 export const BUDGET = 250
+
+export const characters = {
+    DASH: "-",
+    PLUS: "+",
+    N_A: "N/A",
+    QUESTION_MARK: "?"
+}
 
 export const colors = {
     GREEN: "green",

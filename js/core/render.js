@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, DASH, PLUS, colors, N_A, QUESTION_MARK, gameOutcome, gameState } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, colors, characters, gameOutcome, gameState } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -111,7 +111,7 @@ export function renderLeaderboardTable() {
 
     // Movement relative to last week
     const prevRank = lastWeekRanks[p.player] ?? rank;
-    let movement = DASH;
+    let movement = characters.DASH;
     const diff = prevRank - rank;
     if (diff > 0) movement = `+${diff}`;
     else if (diff < 0) movement = `${diff}`;
@@ -124,8 +124,8 @@ export function renderLeaderboardTable() {
       <td>${movement}</td>
     `;
 
-    if (movement.startsWith(PLUS)) row.cells[3].style.color = colors.GREEN;
-    if (movement.startsWith(DASH) && diff < 0) row.cells[3].style.color = colors.RED;
+    if (movement.startsWith(characters.PLUS)) row.cells[3].style.color = colors.GREEN;
+    if (movement.startsWith(characters.DASH) && diff < 0) row.cells[3].style.color = colors.RED;
 
     leaderboardTable.appendChild(row);
   });
@@ -187,7 +187,7 @@ export function renderPlayerBreakdown() {
     const game = state.totalGames[state.selectedWeek].find(g => g.team === team);
     if (!game) return;
 
-    const opponent = game.opponent ?? N_A;
+    const opponent = game.opponent ?? characters.N_A;
 
     // Determine score display
     const fullScore = (() => {
@@ -205,8 +205,8 @@ export function renderPlayerBreakdown() {
     })();
 
     // Determine result and points
-    let result = QUESTION_MARK;
-    let points = QUESTION_MARK;
+    let result = characters.QUESTION_MARK;
+    let points = characters.QUESTION_MARK;
 
     if (game.state === gameState.POST) {
       if (game.score > game.opponentScore) { result = gameOutcome.W; points = pointsBySeason[state.seasonType]; }
@@ -215,15 +215,15 @@ export function renderPlayerBreakdown() {
     }
 
     // Determine Win Probability
-    let wpDisplay = DASH;
+    let wpDisplay = characters.DASH;
     if (game.state === gameState.POST) {
-      wpDisplay = DASH; // final
+      wpDisplay = characters.DASH; // final
     } else if (game.state === gameState.PRE) {
       // TODO: calculate via odds if available
-      wpDisplay = DASH;
+      wpDisplay = characters.DASH;
     } else if (game.state === gameState.IN) {
       // live game probability from ESPN
-      wpDisplay = game.wp != null ? (game.wp / 100).toFixed(2) : DASH;
+      wpDisplay = game.wp != null ? (game.wp / 100).toFixed(2) : characters.DASH;
     }
 
     const teamLogo = state.teamLogos[team] || NFL_LOGO;
@@ -244,7 +244,7 @@ export function renderPlayerBreakdown() {
     if (result === gameOutcome.L) row.cells[3].style.color = colors.RED;
 
     // Color WP for live games
-    if (game.state === gameState.IN && wpDisplay !== DASH) {
+    if (game.state === gameState.IN && wpDisplay !== characters.DASH) {
       const wpNum = parseFloat(wpDisplay);
       row.cells[5].style.color = wpNum > 0.5 ? colors.GREEN : colors.RED;
     }
