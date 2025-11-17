@@ -1,4 +1,4 @@
-import { pool, teamCosts, pointsBySeason } from '../core/statics.js';
+import { pool, teamCosts, pointsBySeason, NFL_LOGO } from '../core/statics.js';
 import { fetchCurrentWeekInfo, fetchWeekGames } from '../core/api.js';
 import { state } from '../core/state.js';
 import {showLoading, hideLoading} from '../core/loading.js'
@@ -27,7 +27,7 @@ function createStatCard(title, subtitle, teams) {
     listContainer.className = "team-list";
 
     teams.forEach(team => {
-        const logoUrl = team.logo || state.teamLogos[team.name] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+        const logoUrl = team.logo || state.teamLogos[team.name] || NFL_LOGO;
 
         const row = document.createElement("div");
         row.className = "team-row";

@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -197,7 +197,7 @@ export function renderPlayerBreakdown() {
 
       if (game.score !== game.opponentScore) {
         const winnerTeam = game.score > game.opponentScore ? game.team : game.opponent;
-        const winnerLogo = state.teamLogos[winnerTeam] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+        const winnerLogo = state.teamLogos[winnerTeam] || NFL_LOGO;
         scoreText += ` <img src="${winnerLogo}" class="team-cell-logo" alt="${winnerTeam} logo"> ${winnerTeam}`;
       }
 
@@ -226,8 +226,8 @@ export function renderPlayerBreakdown() {
       wpDisplay = game.wp != null ? (game.wp / 100).toFixed(2) : "-";
     }
 
-    const teamLogo = state.teamLogos[team] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
-    const opponentLogo = state.teamLogos[opponent] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+    const teamLogo = state.teamLogos[team] || NFL_LOGO;
+    const opponentLogo = state.teamLogos[opponent] || NFL_LOGO;
 
     const row = document.createElement("tr");
     row.innerHTML = `
