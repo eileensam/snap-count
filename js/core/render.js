@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, PRE, POST, DASH, PLUS, GREEN, RED, N_A, QUESTION_MARK, gameOutcome } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, DASH, PLUS, GREEN, RED, N_A, QUESTION_MARK, gameOutcome, gameState } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -19,7 +19,7 @@ function getCumulativePoints(playerObj, upToWeek) {
     const games = state.totalGames[w] || [];
     playerObj.teamList.forEach(team => {
       const game = games.find(g => g.team === team);
-      if (!game || game.state !== POST) return;
+      if (!game || game.state !== gameState.POST) return;
 
       const pts = game.score > game.opponentScore
         ? pointsBySeason[state.seasonType]
@@ -82,7 +82,7 @@ export function renderLeaderboardTable() {
     player.teamList.forEach(team => {
       Object.values(state.totalGames).forEach(games => {
         const game = games.find(g => g.team === team);
-        if (!game || game.state !== POST) return;
+        if (!game || game.state !== gameState.POST) return;
 
         const pts = game.score > game.opponentScore
           ? pointsBySeason[state.seasonType]
@@ -191,7 +191,7 @@ export function renderPlayerBreakdown() {
 
     // Determine score display
     const fullScore = (() => {
-      if (game.state === PRE) return game.status;
+      if (game.state === gameState.PRE) return game.status;
 
       let scoreText = `${game.score}-${game.opponentScore}`;
 
@@ -208,7 +208,7 @@ export function renderPlayerBreakdown() {
     let result = QUESTION_MARK;
     let points = QUESTION_MARK;
 
-    if (game.state === POST) {
+    if (game.state === gameState.POST) {
       if (game.score > game.opponentScore) { result = gameOutcome.W; points = pointsBySeason[state.seasonType]; }
       else if (game.score < game.opponentScore) { result = gameOutcome.L; points = 0; }
       else { result = gameOutcome.T; points = 0.5 * pointsBySeason[state.seasonType]; }
@@ -216,12 +216,12 @@ export function renderPlayerBreakdown() {
 
     // Determine Win Probability
     let wpDisplay = DASH;
-    if (game.state === POST) {
+    if (game.state === gameState.POST) {
       wpDisplay = DASH; // final
-    } else if (game.state === PRE) {
+    } else if (game.state === gameState.PRE) {
       // TODO: calculate via odds if available
       wpDisplay = DASH;
-    } else if (game.state === "in") {
+    } else if (game.state === gameState.IN) {
       // live game probability from ESPN
       wpDisplay = game.wp != null ? (game.wp / 100).toFixed(2) : DASH;
     }
@@ -244,7 +244,7 @@ export function renderPlayerBreakdown() {
     if (result === gameOutcome.L) row.cells[3].style.color = RED;
 
     // Color WP for live games
-    if (game.state === "in" && wpDisplay !== DASH) {
+    if (game.state === gameState.IN && wpDisplay !== DASH) {
       const wpNum = parseFloat(wpDisplay);
       row.cells[5].style.color = wpNum > 0.5 ? GREEN : RED;
     }
@@ -272,7 +272,7 @@ export function renderLeaderboardChart() {
       (state.totalGames[w] || []).forEach(g => {
         const playerObj = pool.find(p => p.player === player);
         if (playerObj?.teamList.includes(g.team)) {
-          if (g.state === POST) {
+          if (g.state === gameState.POST) {
             cumulative += g.score > g.opponentScore
               ? pointsBySeason[state.seasonType]
               : g.score === g.opponentScore

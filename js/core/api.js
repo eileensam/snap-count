@@ -1,5 +1,6 @@
 // core/api.js
 import { state, saveState } from './state.js';
+import { gameState } from './statics.js';
 
 export const teamLogos = {}
 
@@ -23,7 +24,7 @@ export async function fetchWeekGames(week) {
       // Grab in-progress win probability safely
       let homeWP = null;
       let awayWP = null;
-      if (event.status.type.state === "in") {
+      if (event.status.type.state === gameState.IN) {
         try {
           const prob = event.competitions[0].situation?.lastPlay?.probability;
           if (prob) {
