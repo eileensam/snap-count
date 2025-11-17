@@ -249,8 +249,6 @@ function renderPerfectLineup(pointsByTeam) {
     );
 }
 
-
-
 // ==========================
 // Render stats
 // ==========================
