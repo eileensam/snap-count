@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, PRE, POST, DASH, PLUS, GREEN, RED, N_A } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, PRE, POST, DASH, PLUS, GREEN, RED, N_A, QUESTION_MARK } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -205,8 +205,8 @@ export function renderPlayerBreakdown() {
     })();
 
     // Determine result and points
-    let result = "?";
-    let points = "?";
+    let result = QUESTION_MARK;
+    let points = QUESTION_MARK;
 
     if (game.state === POST) {
       if (game.score > game.opponentScore) { result = "W"; points = pointsBySeason[state.seasonType]; }
