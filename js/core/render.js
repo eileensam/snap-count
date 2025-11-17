@@ -115,7 +115,8 @@ export function renderPlayerBreakdown() {
     if (!game) return;
 
     const opponent = game.opponent ?? "N/A";
-    const winner = game.score >= game.opponentScore ? game.team : game.opponent;
+
+    // Determine score display
     const fullScore = (() => {
       if (game.state === "pre") return game.status;
 
@@ -130,13 +131,26 @@ export function renderPlayerBreakdown() {
       return scoreText;
     })();
 
-
+    // Determine result and points
     let result = "?";
     let points = "?";
+
     if (game.state === "post") {
       if (game.score > game.opponentScore) { result = "W"; points = pointsBySeason[state.seasonType]; }
       else if (game.score < game.opponentScore) { result = "L"; points = 0; }
       else { result = "T"; points = 0.5 * pointsBySeason[state.seasonType]; }
+    }
+
+    // Determine Win Probability
+    let wpDisplay = "-";
+    if (game.state === "post") {
+      wpDisplay = "-"; // final
+    } else if (game.state === "pre") {
+      // TODO: calculate via odds if available
+      wpDisplay = "-";
+    } else if (game.state === "in") {
+      // live game probability from ESPN
+      wpDisplay = game.wp != null ? (game.wp / 100).toFixed(2) : "-";
     }
 
     const teamLogo = state.teamLogos[team] || "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
@@ -149,10 +163,18 @@ export function renderPlayerBreakdown() {
       <td>${fullScore}</td>
       <td>${result}</td>
       <td>${points}</td>
+      <td>${wpDisplay}</td>
     `;
 
+    // Color result
     if (result === "W") row.cells[3].style.color = "green";
     if (result === "L") row.cells[3].style.color = "red";
+
+    // Color WP for live games
+    if (game.state === "in" && wpDisplay !== "-") {
+      const wpNum = parseFloat(wpDisplay);
+      row.cells[5].style.color = wpNum > 0.5 ? "green" : "red";
+    }
 
     playerTableBody.appendChild(row);
   });

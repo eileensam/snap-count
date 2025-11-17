@@ -20,6 +20,20 @@ export async function fetchWeekGames(week) {
       // persist logos immediately
       saveState();
 
+      // Grab in-progress win probability safely
+      let homeWP = null;
+      let awayWP = null;
+      if (event.status.type.state === "in") {
+        try {
+          const prob = event.competitions[0].situation?.lastPlay?.probability;
+          if (prob) {
+            homeWP = +prob.homeWinPercentage * 100;
+            awayWP = +prob.awayWinPercentage * 100;
+          }
+        } catch (err) {
+          console.warn(`Failed to get live WP for ${home.team.name} vs ${away.team.name}`);
+        }
+      }
 
       return [
         {
@@ -28,7 +42,8 @@ export async function fetchWeekGames(week) {
           opponent: away.team.name,
           opponentScore: +away.score,
           state: event.status.type.state,
-          status: event.status.type.shortDetail
+          status: event.status.type.shortDetail,
+          wp: homeWP
         },
         {
           team: away.team.name,
@@ -36,7 +51,8 @@ export async function fetchWeekGames(week) {
           opponent: home.team.name,
           opponentScore: +home.score,
           state: event.status.type.state,
-          status: event.status.type.shortDetail
+          status: event.status.type.shortDetail,
+          wp: awayWP
         }
       ];
     });
