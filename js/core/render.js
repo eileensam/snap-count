@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, POST } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -19,7 +19,7 @@ function getCumulativePoints(playerObj, upToWeek) {
     const games = state.totalGames[w] || [];
     playerObj.teamList.forEach(team => {
       const game = games.find(g => g.team === team);
-      if (!game || game.state !== "post") return;
+      if (!game || game.state !== POST) return;
 
       const pts = game.score > game.opponentScore
         ? pointsBySeason[state.seasonType]
@@ -82,7 +82,7 @@ export function renderLeaderboardTable() {
     player.teamList.forEach(team => {
       Object.values(state.totalGames).forEach(games => {
         const game = games.find(g => g.team === team);
-        if (!game || game.state !== "post") return;
+        if (!game || game.state !== POST) return;
 
         const pts = game.score > game.opponentScore
           ? pointsBySeason[state.seasonType]
@@ -208,7 +208,7 @@ export function renderPlayerBreakdown() {
     let result = "?";
     let points = "?";
 
-    if (game.state === "post") {
+    if (game.state === POST) {
       if (game.score > game.opponentScore) { result = "W"; points = pointsBySeason[state.seasonType]; }
       else if (game.score < game.opponentScore) { result = "L"; points = 0; }
       else { result = "T"; points = 0.5 * pointsBySeason[state.seasonType]; }
@@ -216,7 +216,7 @@ export function renderPlayerBreakdown() {
 
     // Determine Win Probability
     let wpDisplay = "-";
-    if (game.state === "post") {
+    if (game.state === POST) {
       wpDisplay = "-"; // final
     } else if (game.state === "pre") {
       // TODO: calculate via odds if available
@@ -272,7 +272,7 @@ export function renderLeaderboardChart() {
       (state.totalGames[w] || []).forEach(g => {
         const playerObj = pool.find(p => p.player === player);
         if (playerObj?.teamList.includes(g.team)) {
-          if (g.state === "post") {
+          if (g.state === POST) {
             cumulative += g.score > g.opponentScore
               ? pointsBySeason[state.seasonType]
               : g.score === g.opponentScore

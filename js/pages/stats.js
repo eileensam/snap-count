@@ -1,4 +1,4 @@
-import { pool, teamCosts, pointsBySeason, NFL_LOGO } from '../core/statics.js';
+import { pool, teamCosts, pointsBySeason, NFL_LOGO, POST } from '../core/statics.js';
 import { fetchCurrentWeekInfo, fetchWeekGames } from '../core/api.js';
 import { state } from '../core/state.js';
 import {showLoading, hideLoading} from '../core/loading.js'
@@ -79,7 +79,7 @@ function calculateTeamPoints() {
 
     Object.values(totalGames).forEach(games => {
         games.forEach(game => {
-            if (game.state === "post") {
+            if (game.state === POST) {
                 const points = game.score > game.opponentScore
                     ? pointsBySeason[seasonType]
                     : (game.score === game.opponentScore ? 0.5 * pointsBySeason[seasonType] : 0);
@@ -154,7 +154,7 @@ function renderBiggestUpset() {
 
     Object.values(totalGames).forEach(games => {
         games.forEach(game => {
-            if (game.state !== "post") return;
+            if (game.state !== POST) return;
 
             let winner, loser, winnerScore = game.score, loserScore = game.opponentScore;
 

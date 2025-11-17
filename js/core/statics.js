@@ -243,4 +243,6 @@ export const teamCosts = [
     {name: teams.SAINTS, cost: 30},
 ]
 
+// Constants
 export const NFL_LOGO = "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png"
+export const POST = "post"
