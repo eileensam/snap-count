@@ -1,4 +1,4 @@
-import { pool, teamCosts, pointsBySeason, NFL_LOGO, gameState } from '../core/statics.js';
+import { pool, teamCosts, pointsBySeason, NFL_LOGO, gameState, BUDGET } from '../core/statics.js';
 import { fetchCurrentWeekInfo, fetchWeekGames } from '../core/api.js';
 import { state } from '../core/state.js';
 import {showLoading, hideLoading} from '../core/loading.js'
@@ -201,7 +201,7 @@ function renderBiggestUpset() {
 // Perfect Lineup
 // --------------------
 function renderPerfectLineup(pointsByTeam) {
-    const budget = 250;
+    const budget = BUDGET;
 
     const teamList = teamCosts.map(tc => ({
         name: tc.name,

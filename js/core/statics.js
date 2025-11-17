@@ -251,6 +251,7 @@ export const GREEN = "green"
 export const RED = "red"
 export const N_A = "N/A"
 export const QUESTION_MARK = "?"
+export const BUDGET = 250
 
 export const gameState = {
     IN: "in",
