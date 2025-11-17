@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, PRE, POST, DASH, PLUS, GREEN, RED } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, PRE, POST, DASH, PLUS, GREEN, RED, N_A } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -187,7 +187,7 @@ export function renderPlayerBreakdown() {
     const game = state.totalGames[state.selectedWeek].find(g => g.team === team);
     if (!game) return;
 
-    const opponent = game.opponent ?? "N/A";
+    const opponent = game.opponent ?? N_A;
 
     // Determine score display
     const fullScore = (() => {
