@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, POST } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, POST, DASH } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -111,7 +111,7 @@ export function renderLeaderboardTable() {
 
     // Movement relative to last week
     const prevRank = lastWeekRanks[p.player] ?? rank;
-    let movement = "-";
+    let movement = DASH;
     const diff = prevRank - rank;
     if (diff > 0) movement = `+${diff}`;
     else if (diff < 0) movement = `${diff}`;
@@ -125,7 +125,7 @@ export function renderLeaderboardTable() {
     `;
 
     if (movement.startsWith("+")) row.cells[3].style.color = "green";
-    if (movement.startsWith("-") && diff < 0) row.cells[3].style.color = "red";
+    if (movement.startsWith(DASH) && diff < 0) row.cells[3].style.color = "red";
 
     leaderboardTable.appendChild(row);
   });
@@ -215,15 +215,15 @@ export function renderPlayerBreakdown() {
     }
 
     // Determine Win Probability
-    let wpDisplay = "-";
+    let wpDisplay = DASH;
     if (game.state === POST) {
-      wpDisplay = "-"; // final
+      wpDisplay = DASH; // final
     } else if (game.state === "pre") {
       // TODO: calculate via odds if available
-      wpDisplay = "-";
+      wpDisplay = DASH;
     } else if (game.state === "in") {
       // live game probability from ESPN
-      wpDisplay = game.wp != null ? (game.wp / 100).toFixed(2) : "-";
+      wpDisplay = game.wp != null ? (game.wp / 100).toFixed(2) : DASH;
     }
 
     const teamLogo = state.teamLogos[team] || NFL_LOGO;
@@ -244,7 +244,7 @@ export function renderPlayerBreakdown() {
     if (result === "L") row.cells[3].style.color = "red";
 
     // Color WP for live games
-    if (game.state === "in" && wpDisplay !== "-") {
+    if (game.state === "in" && wpDisplay !== DASH) {
       const wpNum = parseFloat(wpDisplay);
       row.cells[5].style.color = wpNum > 0.5 ? "green" : "red";
     }
