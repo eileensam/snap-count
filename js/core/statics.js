@@ -247,11 +247,14 @@ export const teamCosts = [
 export const NFL_LOGO = "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png"
 export const DASH = "-"
 export const PLUS = "+"
-export const GREEN = "green"
-export const RED = "red"
 export const N_A = "N/A"
 export const QUESTION_MARK = "?"
 export const BUDGET = 250
+
+export const colors = {
+    GREEN: "green",
+    RED: "red"
+}
 
 export const gameState = {
     IN: "in",

@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, DASH, PLUS, GREEN, RED, N_A, QUESTION_MARK, gameOutcome, gameState } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, DASH, PLUS, colors, N_A, QUESTION_MARK, gameOutcome, gameState } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -124,8 +124,8 @@ export function renderLeaderboardTable() {
       <td>${movement}</td>
     `;
 
-    if (movement.startsWith(PLUS)) row.cells[3].style.color = GREEN;
-    if (movement.startsWith(DASH) && diff < 0) row.cells[3].style.color = RED;
+    if (movement.startsWith(PLUS)) row.cells[3].style.color = colors.GREEN;
+    if (movement.startsWith(DASH) && diff < 0) row.cells[3].style.color = colors.RED;
 
     leaderboardTable.appendChild(row);
   });
@@ -240,13 +240,13 @@ export function renderPlayerBreakdown() {
     `;
 
     // Color result
-    if (result === gameOutcome.W) row.cells[3].style.color = GREEN;
-    if (result === gameOutcome.L) row.cells[3].style.color = RED;
+    if (result === gameOutcome.W) row.cells[3].style.color = colors.GREEN;
+    if (result === gameOutcome.L) row.cells[3].style.color = colors.RED;
 
     // Color WP for live games
     if (game.state === gameState.IN && wpDisplay !== DASH) {
       const wpNum = parseFloat(wpDisplay);
-      row.cells[5].style.color = wpNum > 0.5 ? GREEN : RED;
+      row.cells[5].style.color = wpNum > 0.5 ? colors.GREEN : colors.RED;
     }
 
     playerTableBody.appendChild(row);
