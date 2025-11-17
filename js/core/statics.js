@@ -253,3 +253,9 @@ export const GREEN = "green"
 export const RED = "red"
 export const N_A = "N/A"
 export const QUESTION_MARK = "?"
+
+export const gameOutcome = {
+    W: "W",
+    L: "L",
+    T: "T"
+}

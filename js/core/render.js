@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, PRE, POST, DASH, PLUS, GREEN, RED, N_A, QUESTION_MARK } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, PRE, POST, DASH, PLUS, GREEN, RED, N_A, QUESTION_MARK, gameOutcome } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -209,9 +209,9 @@ export function renderPlayerBreakdown() {
     let points = QUESTION_MARK;
 
     if (game.state === POST) {
-      if (game.score > game.opponentScore) { result = "W"; points = pointsBySeason[state.seasonType]; }
-      else if (game.score < game.opponentScore) { result = "L"; points = 0; }
-      else { result = "T"; points = 0.5 * pointsBySeason[state.seasonType]; }
+      if (game.score > game.opponentScore) { result = gameOutcome.W; points = pointsBySeason[state.seasonType]; }
+      else if (game.score < game.opponentScore) { result = gameOutcome.L; points = 0; }
+      else { result = gameOutcome.T; points = 0.5 * pointsBySeason[state.seasonType]; }
     }
 
     // Determine Win Probability
@@ -240,8 +240,8 @@ export function renderPlayerBreakdown() {
     `;
 
     // Color result
-    if (result === "W") row.cells[3].style.color = GREEN;
-    if (result === "L") row.cells[3].style.color = RED;
+    if (result === gameOutcome.W) row.cells[3].style.color = GREEN;
+    if (result === gameOutcome.L) row.cells[3].style.color = RED;
 
     // Color WP for live games
     if (game.state === "in" && wpDisplay !== DASH) {
