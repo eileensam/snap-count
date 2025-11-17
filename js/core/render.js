@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, POST, DASH, PLUS, GREEN } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, POST, DASH, PLUS, GREEN, RED } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -125,7 +125,7 @@ export function renderLeaderboardTable() {
     `;
 
     if (movement.startsWith(PLUS)) row.cells[3].style.color = GREEN;
-    if (movement.startsWith(DASH) && diff < 0) row.cells[3].style.color = "red";
+    if (movement.startsWith(DASH) && diff < 0) row.cells[3].style.color = RED;
 
     leaderboardTable.appendChild(row);
   });
@@ -241,12 +241,12 @@ export function renderPlayerBreakdown() {
 
     // Color result
     if (result === "W") row.cells[3].style.color = GREEN;
-    if (result === "L") row.cells[3].style.color = "red";
+    if (result === "L") row.cells[3].style.color = RED;
 
     // Color WP for live games
     if (game.state === "in" && wpDisplay !== DASH) {
       const wpNum = parseFloat(wpDisplay);
-      row.cells[5].style.color = wpNum > 0.5 ? GREEN : "red";
+      row.cells[5].style.color = wpNum > 0.5 ? GREEN : RED;
     }
 
     playerTableBody.appendChild(row);
