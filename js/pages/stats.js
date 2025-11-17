@@ -1,6 +1,7 @@
 import { pool, teamCosts, pointsBySeason } from '../core/statics.js';
 import { fetchCurrentWeekInfo, fetchWeekGames } from '../core/api.js';
 import { state } from '../core/state.js';
+import {showLoading, hideLoading} from '../core/loading.js'
 
 const statsContainer = document.getElementById("stats-container");
 
@@ -265,9 +266,11 @@ function renderStats(pointsByTeam) {
 // Initialize stats page
 // ==========================
 async function initStats() {
+    showLoading();
     await fetchAllWeeks();
     const pointsByTeam = calculateTeamPoints();
     renderStats(pointsByTeam);
+    hideLoading();
 }
 
 initStats();
