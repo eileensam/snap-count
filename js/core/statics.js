@@ -208,6 +208,14 @@ export const pointsBySeason = {
     "Regular Season": 1
 }
 
+export const playoffPointsByRound = {
+  BYE_OR_WILD_CARD: 3,
+  DIVISIONAL: 3,
+  CONFERENCE: 5,
+  SUPER_BOWL: 5
+};
+
+
 export const teamCosts = [
     {name: teams.BILLS, cost: 75},
     {name: teams.RAVENS, cost: 75},
