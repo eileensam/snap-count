@@ -1,5 +1,14 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, colors, characters, gameOutcome, gameState, playoffPointsByRound } from './statics.js';
+import {
+  pool,
+  pointsBySeason,
+  NFL_LOGO,
+  colors,
+  characters,
+  gameOutcome,
+  gameState,
+  playoffPointsByRound
+} from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -11,30 +20,26 @@ const leaderboardCanvas = document.getElementById("leaderboardChart");
 let leaderboardChart = null;
 
 // ===============================
-// Helper: Get points based on season
+// Helper: Get points for a single game
 // ===============================
 function getPointsForGame(game) {
   if (game.state !== gameState.POST) return 0;
 
-  // Regular season
-  if (state.seasonType === "Regular Season") {
-    if (game.score > game.opponentScore) return pointsBySeason["Regular Season"];
-    if (game.score === game.opponentScore) return 0.5 * pointsBySeason["Regular Season"];
+  // Playoffs: use round if available
+  if (game.round) {
+    if (game.score > game.opponentScore) return playoffPointsByRound[game.round] ?? 0;
+    if (game.score === game.opponentScore) return 0.5 * (playoffPointsByRound[game.round] ?? 0);
     return 0;
   }
 
-  // Postseason
-  if (state.seasonType === "Postseason") {
-    if (game.score <= game.opponentScore) return 0;
-    return playoffPointsByRound[game.round] ?? 0;
-  }
-
+  // Regular season
+  if (game.score > game.opponentScore) return pointsBySeason["Regular Season"];
+  if (game.score === game.opponentScore) return 0.5 * pointsBySeason["Regular Season"];
   return 0;
 }
 
-
 // ===============================
-// Helper: Get player's cumulative points
+// Helper: Get cumulative points for a player up to a given week
 // ===============================
 function getCumulativePoints(playerObj, upToWeek) {
   let total = 0;
@@ -42,10 +47,9 @@ function getCumulativePoints(playerObj, upToWeek) {
     const games = state.totalGames[w] || [];
     playerObj.teamList.forEach(team => {
       const game = games.find(g => g.team === team);
-      if (!game || game.state !== gameState.POST) return;
+      if (!game) return;
 
       total += getPointsForGame(game);
-
     });
   }
   return total;
@@ -55,23 +59,20 @@ function getCumulativePoints(playerObj, upToWeek) {
 // Helper: Get player's previous rank
 // ===============================
 function getLastWeekRanks() {
-  if (state.selectedWeek <= 1) return {}; // first week, no movement
+  if (state.selectedWeek <= 1) return {};
 
   const ranks = {};
   const filtered = pool.filter(p => state.showSmallGroup ? p.inSnapCount : true);
 
-  // calculate points last week
   const pointsByPlayer = {};
   filtered.forEach(p => {
     pointsByPlayer[p.player] = getCumulativePoints(p, state.selectedWeek - 1);
   });
 
-  // sort descending
-  const sorted = filtered.sort((a, b) => pointsByPlayer[b.player] - pointsByPlayer[a.player]);
+  const sorted = filtered.slice().sort((a, b) => pointsByPlayer[b.player] - pointsByPlayer[a.player]);
 
   let lastScore = null;
   let lastRank = 0;
-
   sorted.forEach((p, idx) => {
     const score = pointsByPlayer[p.player];
     let rank = score === lastScore ? lastRank : idx + 1;
@@ -84,36 +85,21 @@ function getLastWeekRanks() {
 }
 
 // ===============================
-// Leaderboard table with ties
+// Leaderboard table
 // ===============================
-
 export function renderLeaderboardTable() {
   leaderboardTable.innerHTML = "";
 
-  // Filter based on small group toggle
   const filtered = pool.filter(p => state.showSmallGroup ? p.inSnapCount : true);
 
-  // Calculate points
   const pointsByPlayer = {};
-  filtered.forEach(p => pointsByPlayer[p.player] = 0);
-  filtered.forEach(player => {
-    player.teamList.forEach(team => {
-      Object.values(state.totalGames).forEach(games => {
-        const game = games.find(g => g.team === team);
-        if (!game || game.state !== gameState.POST) return;
+  filtered.forEach(player => pointsByPlayer[player.player] = getCumulativePoints(player, state.selectedWeek));
 
-        pointsByPlayer[player.player] += getPointsForGame(game);
-      });
-    });
-  });
-
-  // Sort by points descending
-  const sorted = filtered.sort((a, b) => pointsByPlayer[b.player] - pointsByPlayer[a.player]);
-
-  let lastScore = null;
-  let lastRank = 0;
+  const sorted = filtered.slice().sort((a, b) => pointsByPlayer[b.player] - pointsByPlayer[a.player]);
 
   const lastWeekRanks = getLastWeekRanks();
+  let lastScore = null;
+  let lastRank = 0;
 
   sorted.forEach((p, idx) => {
     const score = pointsByPlayer[p.player];
@@ -121,10 +107,9 @@ export function renderLeaderboardTable() {
     if (rank !== lastRank) lastRank = rank;
     lastScore = score;
 
-    // Movement relative to last week
     const prevRank = lastWeekRanks[p.player] ?? rank;
-    let movement = characters.DASH;
     const diff = prevRank - rank;
+    let movement = characters.DASH;
     if (diff > 0) movement = `+${diff}`;
     else if (diff < 0) movement = `${diff}`;
 
@@ -146,19 +131,17 @@ export function renderLeaderboardTable() {
 // ===============================
 // Player dropdown
 // ===============================
-
 export function renderPlayerDropdown() {
   playerSelect.innerHTML = "";
-
   const filtered = pool.filter(p => state.showSmallGroup ? p.inSnapCount : true);
 
-  filtered.forEach((p, index) => {
+  filtered.forEach((p, idx) => {
     const option = document.createElement("option");
     option.value = p.player;
     option.textContent = p.player;
     playerSelect.appendChild(option);
 
-    if (index === 0 && (!state.selectedPlayer || !filtered.some(f => f.player === state.selectedPlayer))) {
+    if (idx === 0 && (!state.selectedPlayer || !filtered.some(f => f.player === state.selectedPlayer))) {
       state.selectedPlayer = p.player;
       playerSelect.value = p.player;
     }
@@ -170,8 +153,8 @@ export function renderPlayerDropdown() {
 // ===============================
 export function renderWeekDropdown() {
   weekSelect.innerHTML = "";
-
   const weeks = Object.keys(state.totalGames).map(Number).sort((a, b) => b - a);
+
   weeks.forEach(w => {
     const opt = document.createElement("option");
     opt.value = w;
@@ -179,17 +162,14 @@ export function renderWeekDropdown() {
     weekSelect.appendChild(opt);
   });
 
-  // Set currently selected week
   weekSelect.value = state.selectedWeek;
 }
 
 // ===============================
 // Player breakdown table
 // ===============================
-
 export function renderPlayerBreakdown() {
   playerTableBody.innerHTML = "";
-
   if (!state.selectedPlayer || !state.totalGames[state.selectedWeek]) return;
 
   const playerObj = pool.find(p => p.player === state.selectedPlayer);
@@ -201,49 +181,30 @@ export function renderPlayerBreakdown() {
 
     const opponent = game.opponent ?? characters.N_A;
 
-    // Determine score display
     const fullScore = (() => {
       if (game.state === gameState.PRE) return game.status;
 
       let scoreText = `${game.score}-${game.opponentScore}`;
-
       if (game.score !== game.opponentScore) {
         const winnerTeam = game.score > game.opponentScore ? game.team : game.opponent;
         const winnerLogo = state.teamLogos[winnerTeam] || NFL_LOGO;
         scoreText += ` <img src="${winnerLogo}" class="team-cell-logo" alt="${winnerTeam} logo"> ${winnerTeam}`;
       }
-
       return scoreText;
     })();
 
-    // Determine result and points
     let result = characters.QUESTION_MARK;
     let points = characters.QUESTION_MARK;
 
-    if (game.score > game.opponentScore) {
-      result = gameOutcome.W;
-      points = getPointsForGame(game);
-    }
-    else if (game.score < game.opponentScore) {
-      result = gameOutcome.L;
-      points = 0;
-    }
-    else {
-      result = gameOutcome.T;
-      points = getPointsForGame(game);
-    }
-
-
-    // Determine Win Probability
-    let wpDisplay = characters.DASH;
     if (game.state === gameState.POST) {
-      wpDisplay = characters.DASH; // final
-    } else if (game.state === gameState.PRE) {
-      // TODO: calculate via odds if available
-      wpDisplay = characters.DASH;
-    } else if (game.state === gameState.IN) {
-      // live game probability from ESPN
-      wpDisplay = game.wp != null ? (game.wp / 100).toFixed(2) : characters.DASH;
+      if (game.score > game.opponentScore) { result = gameOutcome.W; points = getPointsForGame(game); }
+      else if (game.score < game.opponentScore) { result = gameOutcome.L; points = 0; }
+      else { result = gameOutcome.T; points = getPointsForGame(game); }
+    }
+
+    let wpDisplay = characters.DASH;
+    if (game.state === gameState.IN && game.wp != null) {
+      wpDisplay = (game.wp / 100).toFixed(2);
     }
 
     const teamLogo = state.teamLogos[team] || NFL_LOGO;
@@ -259,11 +220,8 @@ export function renderPlayerBreakdown() {
       <td>${wpDisplay}</td>
     `;
 
-    // Color result
     if (result === gameOutcome.W) row.cells[3].style.color = colors.GREEN;
     if (result === gameOutcome.L) row.cells[3].style.color = colors.RED;
-
-    // Color WP for live games
     if (game.state === gameState.IN && wpDisplay !== characters.DASH) {
       const wpNum = parseFloat(wpDisplay);
       row.cells[5].style.color = wpNum > 0.5 ? colors.GREEN : colors.RED;
@@ -276,7 +234,6 @@ export function renderPlayerBreakdown() {
 // ===============================
 // Leaderboard chart
 // ===============================
-
 export function renderLeaderboardChart() {
   if (!leaderboardCanvas) return;
 
@@ -284,18 +241,15 @@ export function renderLeaderboardChart() {
   const playersList = filtered.map(p => p.player);
 
   const weeks = Object.keys(state.totalGames).map(Number).filter(w => w <= state.selectedWeek);
-  const colors = ["#FF4C4C","#4CFF4C","#4C4CFF","#FFD700","#FF7F50","#8A2BE2"];
+  const colorsArr = ["#FF4C4C","#4CFF4C","#4C4CFF","#FFD700","#FF7F50","#8A2BE2"];
 
   const datasets = playersList.map((player, idx) => {
     let cumulative = 0;
     const data = weeks.map(w => {
-      (state.totalGames[w] || []).forEach(g => {
+      const games = state.totalGames[w] || [];
+      games.forEach(g => {
         const playerObj = pool.find(p => p.player === player);
-        if (playerObj?.teamList.includes(g.team)) {
-          if (g.state === gameState.POST) {
-            cumulative += getPointsForGame(g);
-          }
-        }
+        if (playerObj?.teamList.includes(g.team)) cumulative += getPointsForGame(g);
       });
       return cumulative;
     });
@@ -304,8 +258,8 @@ export function renderLeaderboardChart() {
       label: player,
       data,
       fill: false,
-      borderColor: colors[idx % colors.length],
-      backgroundColor: colors[idx % colors.length],
+      borderColor: colorsArr[idx % colorsArr.length],
+      backgroundColor: colorsArr[idx % colorsArr.length],
       tension: 0.2
     };
   });

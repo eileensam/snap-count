@@ -70,12 +70,25 @@ export async function fetchCurrentWeekInfo() {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+
+    const seasonType = data.leagues[0].season.type.name;
+    const rawWeek = data.week.number;
+
+    let currentWeek = rawWeek;
+
+    if (seasonType === "Postseason") {
+      const REGULAR_SEASON_WEEKS = 18;
+      currentWeek = REGULAR_SEASON_WEEKS + rawWeek;
+    }
+
     return {
-      currentWeek: data.week.number,
-      seasonType: data.leagues[0].season.type.name
+      currentWeek,
+      seasonType,
+      postseasonWeek: seasonType === "Postseason" ? rawWeek : null
     };
   } catch (err) {
     console.error("Failed to fetch current week info:", err);
     return null;
   }
 }
+
