@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { pool, pointsBySeason, players, NFL_LOGO, colors, characters, gameOutcome, gameState } from './statics.js';
+import { pool, pointsBySeason, players, NFL_LOGO, colors, characters, gameOutcome, gameState, playoffPointsByRound } from './statics.js';
 
 // Cached DOM elements
 const leaderboardTable = document.querySelector("#leaderboard-table tbody");
@@ -9,6 +9,29 @@ const playerTableBody = document.querySelector("#player-table tbody");
 const leaderboardCanvas = document.getElementById("leaderboardChart");
 
 let leaderboardChart = null;
+
+// ===============================
+// Helper: Get points based on season
+// ===============================
+function getPointsForGame(game) {
+  if (game.state !== gameState.POST) return 0;
+
+  // Regular season
+  if (state.seasonType === "Regular Season") {
+    if (game.score > game.opponentScore) return pointsBySeason["Regular Season"];
+    if (game.score === game.opponentScore) return 0.5 * pointsBySeason["Regular Season"];
+    return 0;
+  }
+
+  // Postseason
+  if (state.seasonType === "Postseason") {
+    if (game.score <= game.opponentScore) return 0;
+    return playoffPointsByRound[game.round] ?? 0;
+  }
+
+  return 0;
+}
+
 
 // ===============================
 // Helper: Get player's cumulative points
@@ -21,13 +44,8 @@ function getCumulativePoints(playerObj, upToWeek) {
       const game = games.find(g => g.team === team);
       if (!game || game.state !== gameState.POST) return;
 
-      const pts = game.score > game.opponentScore
-        ? pointsBySeason[state.seasonType]
-        : game.score === game.opponentScore
-          ? 0.5 * pointsBySeason[state.seasonType]
-          : 0;
+      total += getPointsForGame(game);
 
-      total += pts;
     });
   }
   return total;
@@ -84,13 +102,7 @@ export function renderLeaderboardTable() {
         const game = games.find(g => g.team === team);
         if (!game || game.state !== gameState.POST) return;
 
-        const pts = game.score > game.opponentScore
-          ? pointsBySeason[state.seasonType]
-          : game.score === game.opponentScore
-            ? 0.5 * pointsBySeason[state.seasonType]
-            : 0;
-
-        pointsByPlayer[player.player] += pts;
+        pointsByPlayer[player.player] += getPointsForGame(game);
       });
     });
   });
@@ -208,11 +220,19 @@ export function renderPlayerBreakdown() {
     let result = characters.QUESTION_MARK;
     let points = characters.QUESTION_MARK;
 
-    if (game.state === gameState.POST) {
-      if (game.score > game.opponentScore) { result = gameOutcome.W; points = pointsBySeason[state.seasonType]; }
-      else if (game.score < game.opponentScore) { result = gameOutcome.L; points = 0; }
-      else { result = gameOutcome.T; points = 0.5 * pointsBySeason[state.seasonType]; }
+    if (game.score > game.opponentScore) {
+      result = gameOutcome.W;
+      points = getPointsForGame(game);
     }
+    else if (game.score < game.opponentScore) {
+      result = gameOutcome.L;
+      points = 0;
+    }
+    else {
+      result = gameOutcome.T;
+      points = getPointsForGame(game);
+    }
+
 
     // Determine Win Probability
     let wpDisplay = characters.DASH;
@@ -273,11 +293,7 @@ export function renderLeaderboardChart() {
         const playerObj = pool.find(p => p.player === player);
         if (playerObj?.teamList.includes(g.team)) {
           if (g.state === gameState.POST) {
-            cumulative += g.score > g.opponentScore
-              ? pointsBySeason[state.seasonType]
-              : g.score === g.opponentScore
-                ? 0.5 * pointsBySeason[state.seasonType]
-                : 0;
+            cumulative += getPointsForGame(g);
           }
         }
       });
