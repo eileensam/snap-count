@@ -62,6 +62,7 @@ function attachEventListeners() {
     state.selectedWeek = Number(e.target.value);
     render.renderPlayerBreakdown();
     render.renderLeaderboardChart();
+    render.renderLeaderboardTable();
   });
 
   groupRadios.forEach(radio => {
