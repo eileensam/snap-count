@@ -22,7 +22,7 @@ let leaderboardChart = null;
 // ===============================
 // Helper: Get points for a single game
 // ===============================
-function getPointsForGame(game) {
+export function getPointsForGame(game) {
   if (game.state !== gameState.POST) return 0;
 
   // Playoffs: use round if available

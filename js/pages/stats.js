@@ -1,7 +1,8 @@
-import { pool, teamCosts, pointsBySeason, NFL_LOGO, gameState, BUDGET } from '../core/statics.js';
+import { pool, teamCosts, NFL_LOGO, gameState, BUDGET } from '../core/statics.js';
 import { fetchCurrentWeekInfo, fetchWeekGames } from '../core/api.js';
 import { state } from '../core/state.js';
-import {showLoading, hideLoading} from '../core/loading.js'
+import { showLoading, hideLoading } from '../core/loading.js';
+import { getPointsForGame } from '../core/render.js';
 
 const statsContainer = document.getElementById("stats-container");
 
@@ -10,7 +11,6 @@ const statsContainer = document.getElementById("stats-container");
 // ==========================
 let totalGames = JSON.parse(localStorage.getItem("totalGames") || "{}");
 let currentWeek = Number(localStorage.getItem("currentWeek")) || null;
-let seasonType = localStorage.getItem("seasonType") || null;
 
 // ==========================
 // Helper: create stat card
@@ -45,7 +45,6 @@ function createStatCard(title, subtitle, teams) {
     statsContainer.appendChild(section);
 }
 
-
 // ==========================
 // Fetch all weeks using api.js
 // ==========================
@@ -55,10 +54,7 @@ async function fetchAllWeeks() {
     const info = await fetchCurrentWeekInfo();
     if (info) {
         currentWeek = info.currentWeek;
-        seasonType = info.seasonType;
-
         localStorage.setItem("currentWeek", currentWeek);
-        localStorage.setItem("seasonType", seasonType);
     }
 
     for (let week = 1; week <= currentWeek; week++) {
@@ -80,10 +76,7 @@ function calculateTeamPoints() {
     Object.values(totalGames).forEach(games => {
         games.forEach(game => {
             if (game.state === gameState.POST) {
-                const points = game.score > game.opponentScore
-                    ? pointsBySeason[seasonType]
-                    : (game.score === game.opponentScore ? 0.5 * pointsBySeason[seasonType] : 0);
-                pointsByTeam[game.team] += points;
+                pointsByTeam[game.team] += getPointsForGame(game);
             }
         });
     });
@@ -91,9 +84,9 @@ function calculateTeamPoints() {
     return pointsByTeam;
 }
 
-// --------------------
+// ==========================
 // Heaviest Hitter
-// --------------------
+// ==========================
 function renderHeaviestHitter(pointsByTeam) {
     const maxPoints = Math.max(...Object.values(pointsByTeam));
     const topScorers = Object.entries(pointsByTeam)
@@ -111,9 +104,9 @@ function renderHeaviestHitter(pointsByTeam) {
     );
 }
 
-// --------------------
+// ==========================
 // Most / Least Valuable
-// --------------------
+// ==========================
 function renderValueStats(pointsByTeam) {
     const roiByTeam = {};
     for (const [team, pts] of Object.entries(pointsByTeam)) {
@@ -145,9 +138,9 @@ function renderValueStats(pointsByTeam) {
     createStatCard("Least Valuable Team", "Calculated as (total points ÷ cost)", lvtList);
 }
 
-// --------------------
+// ==========================
 // Biggest Upset
-// --------------------
+// ==========================
 function renderBiggestUpset() {
     let biggestUpset = null;
     let maxDisparity = -Infinity;
@@ -197,9 +190,9 @@ function renderBiggestUpset() {
     }
 }
 
-// --------------------
+// ==========================
 // Perfect Lineup
-// --------------------
+// ==========================
 function renderPerfectLineup(pointsByTeam) {
     const budget = BUDGET;
 
@@ -210,7 +203,6 @@ function renderPerfectLineup(pointsByTeam) {
         logo: state.teamLogos[tc.name]
     }));
 
-    // Recursive helper to find the best combination
     function findBestLineup(teamList, budget) {
         let bestCombo = [];
         let bestPoints = -Infinity;
@@ -223,12 +215,12 @@ function renderPerfectLineup(pointsByTeam) {
             }
             if (idx === teamList.length) return;
 
-            // Include team[idx]
+            // Include current team
             currentCombo.push(teamList[idx]);
             helper(idx + 1, currentCombo, totalCost + teamList[idx].cost, totalPoints + teamList[idx].points);
             currentCombo.pop();
 
-            // Exclude team[idx]
+            // Exclude current team
             helper(idx + 1, currentCombo, totalCost, totalPoints);
         }
 
@@ -251,7 +243,7 @@ function renderPerfectLineup(pointsByTeam) {
 }
 
 // ==========================
-// Render stats
+// Render all stats
 // ==========================
 function renderStats(pointsByTeam) {
     statsContainer.innerHTML = ""; // clear previous content
