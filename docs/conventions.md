@@ -5,7 +5,10 @@
 - Commit directly to `main`. No feature branches unless there's a specific reason (e.g. a rewrite that would leave `main` undeployable for a while). GitHub Pages deploys on every push to `main`, so keep each commit self-contained and deployable.
 - Commit message prefixes: `[feat]`, `[fix]`, `[docs]`, `[chore]`.
 - **Committing locally is fine on its own. Pushing to origin is not automatic, ask each time before `git push`.** GitHub Pages deploys whatever's on `origin/main` live, so a push is a publish, not just a save point.
-- **Do a bug pass before every push.** Read through the changes going out (not just the feature just built) looking for correctness and security issues: unescaped user input into `innerHTML`, state that gets stale or mis-indexed after a delete/reorder, edge cases in shared logic. Fix what's found, verify the fix with the same puppeteer-driven interaction testing described below, then push.
+- **Before every push, in this order:**
+  1. **Docs reconciled.** Check `docs/` against what the pending commits actually ship; fix anything stale (see [Docs](#docs) below).
+  2. **Bug pass.** Read through the changes going out, not just the feature just built, for correctness and security issues: unescaped user input into `innerHTML`, state that goes stale or mis-indexed after a delete/reorder, edge cases in shared logic. Fix what's found, verify with the puppeteer-driven interaction testing described below.
+  3. **Clean commit history.** Each commit self-contained and correctly prefixed; split or reorder before pushing, not after.
 
 ## Docs
 
