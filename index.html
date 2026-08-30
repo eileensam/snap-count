@@ -434,14 +434,17 @@
         const updateBtn = document.getElementById('update-lineup-btn');
         const saveAsNewBtn = document.getElementById('save-as-new-btn');
         const loaded = loadedLineupIndex !== null ? savedLineups[loadedLineupIndex] : null;
+        const hasChanges = loaded ? !sameTeams(selected, loaded.teams) : false;
 
         saveBtn.hidden = !!loaded;
-        updateBtn.hidden = !loaded;
+        updateBtn.hidden = !loaded || !hasChanges;
         saveAsNewBtn.hidden = !loaded;
 
         if (loaded) {
-            updateBtn.textContent = 'Update "' + loaded.name + '"';
-            updateBtn.disabled = !picked.length;
+            if (hasChanges) {
+                updateBtn.textContent = 'Update "' + loaded.name + '"';
+                updateBtn.disabled = !picked.length;
+            }
             saveAsNewBtn.disabled = !picked.length;
         } else {
             saveBtn.disabled = !picked.length;
@@ -450,6 +453,10 @@
 
     function escapeHTML(str) {
         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function sameTeams(selectedSet, teamNames) {
+        return selectedSet.size === teamNames.length && teamNames.every(name => selectedSet.has(name));
     }
 
     function lineupTotal(teamNames) {
