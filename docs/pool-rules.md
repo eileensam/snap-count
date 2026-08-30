@@ -1,6 +1,6 @@
 # Pool Rules
 
-Snap-Count tracks a friend-group NFL pool that started in 1997, using a format from a Forbes magazine article. The format hasn't changed since; only team prices and participants shift year to year.
+Snap-Count tracks the Miller Family Football Pool, a friend-group NFL pool that started in 1997, using a format from a Forbes magazine article. The format hasn't changed since; only team prices and participants shift year to year.
 
 ## Entry
 
