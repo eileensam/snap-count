@@ -5,60 +5,422 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Snap-Count</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;0,700;1,700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --paper: #f6efd9;
+            --paper-raised: #fbf6e9;
             --ink: #16130d;
+            --ink-soft: #6b6350;
+            --over: #a5382a;
+            --under: #2c5a3b;
         }
-
         * { box-sizing: border-box; }
-
-        html, body { height: 100%; }
-
         body {
             background: var(--paper);
             color: var(--ink);
+            font-family: 'Bodoni Moda', Georgia, serif;
             margin: 0;
-            position: relative;
+            padding: 1.2rem;
+        }
+        .wrap { max-width: 640px; margin: 0 auto; }
+
+        .header { text-align: center; margin-bottom: 1.6rem; }
+        .wordmark {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.9rem;
+            margin: 0 0 0.9rem;
+        }
+        h1 {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            font-size: 2.6rem;
+            line-height: 1.05;
+            margin: 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .deadline { font-size: 0.8rem; font-weight: 500; color: var(--ink-soft); margin: 0.3rem 0 0; }
+
+        section { margin-bottom: 1.6rem; }
+        h2 {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--ink-soft);
+            margin: 0 0 0.5rem;
+        }
+
+        /* your board */
+        #board {
+            border: 2px solid var(--ink);
+            padding: 0.9rem 1rem;
+        }
+        #board .budget {
             display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 0.5rem;
+        }
+        #board .budget.over { color: var(--over); }
+        #board .budget.under { color: var(--under); }
+        #board .empty { font-size: 0.85rem; color: var(--ink-soft); font-style: italic; }
+        #board-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.7rem 1rem;
+        }
+        #board-list li {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            width: 5.2rem;
+            cursor: pointer;
+            text-align: center;
+        }
+        #board-list .board-price {
+            font-size: 0.72rem;
+            font-weight: 700;
         }
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            opacity: 0.05;
-            mix-blend-mode: multiply;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        /* badges */
+        .badge-wrap { position: relative; flex-shrink: 0; }
+        .badge {
+            display: block;
+            width: 4.6rem;
+            height: 4.6rem;
+            border: 1.5px solid var(--ink);
+            object-fit: cover;
+            background: var(--paper-raised);
         }
-
-        main {
-            position: relative;
-            flex: 1;
+        .badge-placeholder {
+            width: 4.6rem;
+            height: 4.6rem;
+            border: 1.5px solid var(--ink);
+            background: var(--paper-raised);
             display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            padding: 1.5rem;
+            font-weight: 700;
+            font-size: 0.72rem;
+            letter-spacing: 0.03em;
+            color: var(--ink-soft);
+        }
+        #board-list .badge, #board-list .badge-placeholder { width: 4.6rem; height: 4.6rem; }
+        .badge-circle {
+            position: absolute;
+            inset: -0.5rem;
+            pointer-events: none;
         }
 
-        .season {
-            font-family: 'Bodoni Moda', Georgia, serif;
-            font-weight: 700;
+        /* filters: plain native controls, not custom componentry */
+        .filters { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .filters label { display: flex; flex-direction: column; gap: 0.25rem; }
+        .filters select { font: inherit; padding: 0.2rem; }
+
+        /* catalog */
+        .tier-label {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--ink-soft);
+            margin: 1.6rem 0 0.7rem;
+        }
+        .tier-label:first-child { margin-top: 0; }
+        .team-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+        .team {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+        }
+        .team .info { display: flex; flex-direction: column; min-width: 0; flex-shrink: 0; max-width: 60%; }
+        .team .name { font-weight: 600; overflow-wrap: break-word; }
+        .team .meta { font-size: 0.72rem; color: var(--ink-soft); }
+        .team .meta a { color: var(--ink-soft); }
+        .team .leader { flex: 1; min-width: 0.75rem; border-bottom: 2px dotted #ccbd8f; height: 0; align-self: center; margin-top: -0.3rem; }
+        .team .price { font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+
+        .hint {
+            font-size: 0.8rem;
             font-style: italic;
-            font-size: clamp(1.8rem, 6vw, 3rem);
-            line-height: 1.1;
+            color: var(--ink-soft);
+            text-align: center;
+            margin: -0.9rem 0 1.6rem;
         }
     </style>
 </head>
 <body>
+<div class="wrap">
+    <div class="header">
+        <div class="wordmark">Snap-Count</div>
+        <h1 id="countdown">&hellip;</h1>
+        <p class="deadline">until picks are due</p>
+    </div>
 
-<main>
-    <div class="season">Season 2026 loading&hellip;</div>
-</main>
+    <section id="board">
+        <div class="budget" id="budget">$0 of $250</div>
+        <ul id="board-list"></ul>
+        <p class="empty" id="board-empty">No teams selected yet</p>
+    </section>
 
+    <p class="hint">Click teams to select/deselect</p>
+
+    <section class="filters">
+        <label>Conference
+            <select id="conference-select"></select>
+        </label>
+        <label>Division
+            <select id="division-select"></select>
+        </label>
+    </section>
+
+    <section id="catalog"></section>
+</div>
+
+<script>
+    const BUDGET = 250;
+    const STORAGE_KEY = 'snapcount.pickerSelections';
+    const DEADLINE = new Date('2026-09-09T19:20:00-05:00').getTime();
+
+    const LOGOS = {};
+    ['ari', 'atl', 'bal', 'buf', 'car', 'chi', 'cin', 'cle', 'dal', 'den', 'det', 'gb', 'hou', 'ind',
+     'jax', 'kc', 'lac', 'lar', 'lv', 'mia', 'min', 'ne', 'no', 'nyg', 'nyj', 'phi', 'pit', 'sea', 'sf', 'tb', 'ten', 'wsh']
+        .forEach(abbr => { LOGOS[abbr] = 'assets/logos/' + abbr + '.png'; });
+
+    const BORDER_COLORS = {
+        ari: '#802030', atl: '#16130d', bal: '#907000', buf: '#d00000', car: '#0070b0',
+        chi: '#001020', cin: '#f03000', cle: '#300000', dal: '#002050', den: '#f04010',
+        det: '#0030a0', gb: '#16130d', hou: '#001030', ind: '#001070', jax: '#c08000',
+        kc: '#c01020', lac: '#001070', lar: '#002060', lv: '#16130d', mia: '#007070',
+        min: '#f0b000', ne: '#c00020', no: '#16130d', nyg: '#001070', nyj: '#006030',
+        phi: '#006030', pit: '#f0b000', sea: '#003080', sf: '#c02020', tb: '#c01020',
+        ten: '#4080d0', wsh: '#501010'
+    };
+
+    const CIRCLE_SVG = '<svg class="badge-circle" viewBox="0 0 100 100" preserveAspectRatio="none">' +
+        '<path d="M50 4 C 78 3, 97 22, 96 49 C 97 76, 77 97, 49 96 C 21 98, 3 78, 4 50 C 2 23, 22 5, 50 4 Z" ' +
+        'stroke="#16130d" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
+
+    function badgeHTML(team, opts) {
+        opts = opts || {};
+        const abbr = team.espn.split('/')[0];
+        const cls = opts.extraClass ? ' ' + opts.extraClass : '';
+        const borderStyle = 'border-color: ' + (BORDER_COLORS[abbr] || '#16130d') + ';';
+        const inner = LOGOS[abbr]
+            ? '<img class="badge' + cls + '" style="' + borderStyle + '" src="' + LOGOS[abbr] + '" alt="' + team.name + ' logo">'
+            : '<div class="badge-placeholder' + cls + '" style="' + borderStyle + '">' + abbr.toUpperCase() + '</div>';
+        const circle = opts.selected ? CIRCLE_SVG : '';
+        return '<div class="badge-wrap">' + inner + circle + '</div>';
+    }
+
+    const teams = [
+        { name: 'Los Angeles Rams', price: 80, conference: 'NFC', division: 'West', espn: 'lar/los-angeles-rams' },
+        { name: 'Baltimore Ravens', price: 70, conference: 'AFC', division: 'North', espn: 'bal/baltimore-ravens' },
+        { name: 'Buffalo Bills', price: 65, conference: 'AFC', division: 'East', espn: 'buf/buffalo-bills' },
+        { name: 'Seattle Seahawks', price: 60, conference: 'NFC', division: 'West', espn: 'sea/seattle-seahawks' },
+        { name: 'Kansas City Chiefs', price: 60, conference: 'AFC', division: 'West', espn: 'kc/kansas-city-chiefs' },
+        { name: 'Philadelphia Eagles', price: 60, conference: 'NFC', division: 'East', espn: 'phi/philadelphia-eagles' },
+        { name: 'Detroit Lions', price: 55, conference: 'NFC', division: 'North', espn: 'det/detroit-lions' },
+        { name: 'Cincinnati Bengals', price: 55, conference: 'AFC', division: 'North', espn: 'cin/cincinnati-bengals' },
+        { name: 'San Francisco 49ers', price: 55, conference: 'NFC', division: 'West', espn: 'sf/san-francisco-49ers' },
+        { name: 'New England Patriots', price: 55, conference: 'AFC', division: 'East', espn: 'ne/new-england-patriots' },
+        { name: 'Houston Texans', price: 55, conference: 'AFC', division: 'South', espn: 'hou/houston-texans' },
+        { name: 'Los Angeles Chargers', price: 55, conference: 'AFC', division: 'West', espn: 'lac/los-angeles-chargers' },
+        { name: 'Denver Broncos', price: 50, conference: 'AFC', division: 'West', espn: 'den/denver-broncos' },
+        { name: 'Green Bay Packers', price: 50, conference: 'NFC', division: 'North', espn: 'gb/green-bay-packers' },
+        { name: 'Dallas Cowboys', price: 50, conference: 'NFC', division: 'East', espn: 'dal/dallas-cowboys' },
+        { name: 'Chicago Bears', price: 50, conference: 'NFC', division: 'North', espn: 'chi/chicago-bears' },
+        { name: 'Jacksonville Jaguars', price: 50, conference: 'AFC', division: 'South', espn: 'jax/jacksonville-jaguars' },
+        { name: 'Tampa Bay Buccaneers', price: 40, conference: 'NFC', division: 'South', espn: 'tb/tampa-bay-buccaneers' },
+        { name: 'Minnesota Vikings', price: 40, conference: 'NFC', division: 'North', espn: 'min/minnesota-vikings' },
+        { name: 'Pittsburgh Steelers', price: 40, conference: 'AFC', division: 'North', espn: 'pit/pittsburgh-steelers' },
+        { name: 'Indianapolis Colts', price: 35, conference: 'AFC', division: 'South', espn: 'ind/indianapolis-colts' },
+        { name: 'New Orleans Saints', price: 35, conference: 'NFC', division: 'South', espn: 'no/new-orleans-saints' },
+        { name: 'Washington Commanders', price: 35, conference: 'NFC', division: 'East', espn: 'wsh/washington-commanders' },
+        { name: 'New York Giants', price: 35, conference: 'NFC', division: 'East', espn: 'nyg/new-york-giants' },
+        { name: 'Atlanta Falcons', price: 35, conference: 'NFC', division: 'South', espn: 'atl/atlanta-falcons' },
+        { name: 'Carolina Panthers', price: 35, conference: 'NFC', division: 'South', espn: 'car/carolina-panthers' },
+        { name: 'Tennessee Titans', price: 30, conference: 'AFC', division: 'South', espn: 'ten/tennessee-titans' },
+        { name: 'Las Vegas Raiders', price: 25, conference: 'AFC', division: 'West', espn: 'lv/las-vegas-raiders' },
+        { name: 'Cleveland Browns', price: 25, conference: 'AFC', division: 'North', espn: 'cle/cleveland-browns' },
+        { name: 'New York Jets', price: 25, conference: 'AFC', division: 'East', espn: 'nyj/new-york-jets' },
+        { name: 'Miami Dolphins', price: 15, conference: 'AFC', division: 'East', espn: 'mia/miami-dolphins' },
+        { name: 'Arizona Cardinals', price: 10, conference: 'NFC', division: 'West', espn: 'ari/arizona-cardinals' }
+    ];
+
+    const TIERS = [
+        { label: 'Premium', test: p => p >= 55 },
+        { label: 'Mid', test: p => p >= 35 && p < 55 },
+        { label: 'Value', test: p => p < 35 }
+    ];
+
+    function tierFor(price) {
+        return TIERS.find(t => t.test(price)).label;
+    }
+
+    function loadSelections() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? new Set(JSON.parse(raw)) : new Set();
+        } catch (e) {
+            return new Set();
+        }
+    }
+
+    function saveSelections(sel) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([...sel]));
+        } catch (e) { /* localStorage unavailable, selections just won't persist */ }
+    }
+
+    let selected = loadSelections();
+    let activeConference = 'All';
+    let activeDivision = 'All';
+
+    function toggle(teamName) {
+        if (selected.has(teamName)) selected.delete(teamName);
+        else selected.add(teamName);
+        saveSelections(selected);
+        render();
+    }
+
+    function renderChips() {
+        const confSelect = document.getElementById('conference-select');
+        const divSelect = document.getElementById('division-select');
+        const conferences = ['All', 'AFC', 'NFC'];
+        const divisions = ['All', 'East', 'North', 'South', 'West'];
+
+        if (!confSelect.dataset.built) {
+            conferences.forEach(c => confSelect.add(new Option(c, c)));
+            confSelect.dataset.built = '1';
+            confSelect.addEventListener('change', () => {
+                activeConference = confSelect.value;
+                if (activeConference === 'All') activeDivision = 'All';
+                render();
+            });
+        }
+        confSelect.value = activeConference;
+
+        const divisionsEnabled = activeConference !== 'All';
+        if (!divSelect.dataset.built) {
+            divisions.forEach(d => divSelect.add(new Option(d, d)));
+            divSelect.dataset.built = '1';
+            divSelect.addEventListener('change', () => { activeDivision = divSelect.value; render(); });
+        }
+        divSelect.value = activeDivision;
+        divSelect.disabled = !divisionsEnabled;
+    }
+
+    function renderBoard() {
+        const picked = teams.filter(t => selected.has(t.name));
+        const total = picked.reduce((sum, t) => sum + t.price, 0);
+
+        const budgetEl = document.getElementById('budget');
+        budgetEl.textContent = '$' + total + ' of $' + BUDGET;
+        budgetEl.classList.remove('over', 'under');
+        if (total > BUDGET) budgetEl.classList.add('over');
+        else if (total > 0) budgetEl.classList.add('under');
+
+        const list = document.getElementById('board-list');
+        const empty = document.getElementById('board-empty');
+        list.innerHTML = '';
+        empty.style.display = picked.length ? 'none' : 'block';
+
+        picked.forEach(team => {
+            const li = document.createElement('li');
+            li.title = team.name;
+            li.innerHTML = badgeHTML(team) + '<span class="board-price">$' + team.price + '</span>';
+            li.addEventListener('click', () => toggle(team.name));
+            list.appendChild(li);
+        });
+    }
+
+    function renderCatalog() {
+        const visible = teams.filter(t =>
+            (activeConference === 'All' || t.conference === activeConference) &&
+            (activeDivision === 'All' || t.division === activeDivision)
+        );
+
+        const catalog = document.getElementById('catalog');
+        catalog.innerHTML = '';
+
+        TIERS.forEach(tier => {
+            const tierTeams = visible
+                .filter(t => tierFor(t.price) === tier.label)
+                .sort((a, b) => b.price - a.price || a.name.localeCompare(b.name));
+            if (!tierTeams.length) return;
+
+            const heading = document.createElement('div');
+            heading.className = 'tier-label';
+            heading.textContent = tier.label;
+            catalog.appendChild(heading);
+
+            const ul = document.createElement('ul');
+            ul.className = 'team-list';
+
+            tierTeams.forEach(team => {
+                const li = document.createElement('li');
+                li.className = 'team';
+                li.setAttribute('role', 'button');
+                li.setAttribute('tabindex', '0');
+                li.innerHTML =
+                    badgeHTML(team, { selected: selected.has(team.name) }) +
+                    '<div class="info">' +
+                        '<div class="name">' + team.name + '</div>' +
+                        '<div class="meta">' + team.conference + ' ' + team.division +
+                            ' &middot; <a href="https://www.espn.com/nfl/team/_/name/' + team.espn + '" target="_blank" rel="noopener noreferrer">View on ESPN</a>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="leader"></div>' +
+                    '<div class="price">$' + team.price + '</div>';
+                li.querySelector('.meta a').addEventListener('click', e => e.stopPropagation());
+                li.addEventListener('click', () => toggle(team.name));
+                li.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggle(team.name);
+                    }
+                });
+                ul.appendChild(li);
+            });
+
+            catalog.appendChild(ul);
+        });
+    }
+
+    function render() {
+        renderChips();
+        renderBoard();
+        renderCatalog();
+    }
+
+    function updateCountdown() {
+        const diff = Math.max(0, DEADLINE - Date.now());
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
+        document.getElementById('countdown').textContent = days + 'd ' + hours + 'h ' + mins + 'm ' + secs + 's';
+    }
+
+    render();
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+</script>
 </body>
 </html>
