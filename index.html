@@ -429,6 +429,10 @@
         document.getElementById('clear-btn').disabled = !picked.length;
     }
 
+    function escapeHTML(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
     function lineupTotal(teamNames) {
         return teamNames.reduce((sum, name) => {
             const t = teams.find(x => x.name === name);
@@ -446,10 +450,10 @@
             const li = document.createElement('li');
             li.innerHTML =
                 '<div>' +
-                    '<div class="lineup-name">' + lineup.name + '</div>' +
+                    '<div class="lineup-name">' + escapeHTML(lineup.name) + '</div>' +
                     '<div class="lineup-meta">' + lineup.teams.length + ' teams &middot; $' + lineupTotal(lineup.teams) + '</div>' +
                 '</div>' +
-                '<button type="button" class="delete-btn" aria-label="Delete ' + lineup.name + '">&times;</button>';
+                '<button type="button" class="delete-btn" aria-label="Delete ' + escapeHTML(lineup.name) + '">&times;</button>';
             li.addEventListener('click', e => {
                 if (e.target.closest('.delete-btn')) return;
                 selected = new Set(lineup.teams);
