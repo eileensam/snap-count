@@ -165,16 +165,6 @@
         .filters select { font: inherit; padding: 0.2rem; }
 
         /* catalog */
-        .tier-label {
-            font-family: 'Oswald', 'Arial Narrow', sans-serif;
-            font-weight: 500;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--ink-soft);
-            margin: 1.6rem 0 0.7rem;
-        }
-        .tier-label:first-child { margin-top: 0; }
         .team-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; }
         .team {
             display: flex;
@@ -214,6 +204,7 @@
         <div class="board-actions">
             <button type="button" id="share-btn" disabled>Share picks</button>
             <button type="button" id="save-lineup-btn" disabled>Save this lineup</button>
+            <button type="button" id="clear-btn" disabled>Clear selections</button>
         </div>
     </section>
 
@@ -231,6 +222,9 @@
         </label>
         <label>Division
             <select id="division-select"></select>
+        </label>
+        <label>Sort
+            <select id="sort-select"></select>
         </label>
     </section>
 
@@ -308,15 +302,12 @@
         { name: 'Arizona Cardinals', price: 10, conference: 'NFC', division: 'West', espn: 'ari/arizona-cardinals' }
     ];
 
-    const TIERS = [
-        { label: 'Premium', test: p => p >= 55 },
-        { label: 'Mid', test: p => p >= 35 && p < 55 },
-        { label: 'Value', test: p => p < 35 }
-    ];
-
-    function tierFor(price) {
-        return TIERS.find(t => t.test(price)).label;
-    }
+    const SORTS = {
+        'price-desc': { label: 'Price (high to low)', compare: (a, b) => b.price - a.price || a.name.localeCompare(b.name) },
+        'price-asc': { label: 'Price (low to high)', compare: (a, b) => a.price - b.price || a.name.localeCompare(b.name) },
+        'name-asc': { label: 'Name (A-Z)', compare: (a, b) => a.name.localeCompare(b.name) },
+        'name-desc': { label: 'Name (Z-A)', compare: (a, b) => b.name.localeCompare(a.name) }
+    };
 
     function loadSelections() {
         try {
@@ -354,6 +345,7 @@
     let savedLineups = loadSavedLineups();
     let activeConference = 'All';
     let activeDivision = 'All';
+    let activeSort = 'price-desc';
 
     function toggle(teamName) {
         if (selected.has(teamName)) selected.delete(teamName);
@@ -387,6 +379,14 @@
         }
         divSelect.value = activeDivision;
         divSelect.disabled = !divisionsEnabled;
+
+        const sortSelect = document.getElementById('sort-select');
+        if (!sortSelect.dataset.built) {
+            Object.keys(SORTS).forEach(key => sortSelect.add(new Option(SORTS[key].label, key)));
+            sortSelect.dataset.built = '1';
+            sortSelect.addEventListener('change', () => { activeSort = sortSelect.value; render(); });
+        }
+        sortSelect.value = activeSort;
     }
 
     function renderBoard() {
@@ -426,6 +426,7 @@
 
         document.getElementById('share-btn').disabled = !picked.length;
         document.getElementById('save-lineup-btn').disabled = !picked.length;
+        document.getElementById('clear-btn').disabled = !picked.length;
     }
 
     function lineupTotal(teamNames) {
@@ -466,56 +467,46 @@
     }
 
     function renderCatalog() {
-        const visible = teams.filter(t =>
-            (activeConference === 'All' || t.conference === activeConference) &&
-            (activeDivision === 'All' || t.division === activeDivision)
-        );
+        const visible = teams
+            .filter(t =>
+                (activeConference === 'All' || t.conference === activeConference) &&
+                (activeDivision === 'All' || t.division === activeDivision)
+            )
+            .sort(SORTS[activeSort].compare);
 
         const catalog = document.getElementById('catalog');
         catalog.innerHTML = '';
 
-        TIERS.forEach(tier => {
-            const tierTeams = visible
-                .filter(t => tierFor(t.price) === tier.label)
-                .sort((a, b) => b.price - a.price || a.name.localeCompare(b.name));
-            if (!tierTeams.length) return;
+        const ul = document.createElement('ul');
+        ul.className = 'team-list';
 
-            const heading = document.createElement('div');
-            heading.className = 'tier-label';
-            heading.textContent = tier.label;
-            catalog.appendChild(heading);
-
-            const ul = document.createElement('ul');
-            ul.className = 'team-list';
-
-            tierTeams.forEach(team => {
-                const li = document.createElement('li');
-                li.className = 'team';
-                li.setAttribute('role', 'button');
-                li.setAttribute('tabindex', '0');
-                li.innerHTML =
-                    badgeHTML(team, { selected: selected.has(team.name) }) +
-                    '<div class="info">' +
-                        '<div class="name">' + team.name + '</div>' +
-                        '<div class="meta">' + team.conference + ' ' + team.division +
-                            ' &middot; <a href="https://www.espn.com/nfl/team/_/name/' + team.espn + '" target="_blank" rel="noopener noreferrer">View on ESPN</a>' +
-                        '</div>' +
+        visible.forEach(team => {
+            const li = document.createElement('li');
+            li.className = 'team';
+            li.setAttribute('role', 'button');
+            li.setAttribute('tabindex', '0');
+            li.innerHTML =
+                badgeHTML(team, { selected: selected.has(team.name) }) +
+                '<div class="info">' +
+                    '<div class="name">' + team.name + '</div>' +
+                    '<div class="meta">' + team.conference + ' ' + team.division +
+                        ' &middot; <a href="https://www.espn.com/nfl/team/_/name/' + team.espn + '" target="_blank" rel="noopener noreferrer">View on ESPN</a>' +
                     '</div>' +
-                    '<div class="leader"></div>' +
-                    '<div class="price">$' + team.price + '</div>';
-                li.querySelector('.meta a').addEventListener('click', e => e.stopPropagation());
-                li.addEventListener('click', () => toggle(team.name));
-                li.addEventListener('keydown', e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        toggle(team.name);
-                    }
-                });
-                ul.appendChild(li);
+                '</div>' +
+                '<div class="leader"></div>' +
+                '<div class="price">$' + team.price + '</div>';
+            li.querySelector('.meta a').addEventListener('click', e => e.stopPropagation());
+            li.addEventListener('click', () => toggle(team.name));
+            li.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggle(team.name);
+                }
             });
-
-            catalog.appendChild(ul);
+            ul.appendChild(li);
         });
+
+        catalog.appendChild(ul);
     }
 
     function render() {
@@ -562,6 +553,13 @@
         savedLineups.push({ name: name, teams: [...selected] });
         saveSavedLineups(savedLineups);
         renderSavedLineups();
+    });
+
+    document.getElementById('clear-btn').addEventListener('click', () => {
+        if (!selected.size) return;
+        selected = new Set();
+        saveSelections(selected);
+        render();
     });
 
     render();
