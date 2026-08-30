@@ -5,25 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Snap-Count</title>
 
-    <link href="css/style.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
 
     <style>
-        .loading-message {
+        :root {
+            --paper: #f6efd9;
+            --ink: #16130d;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body { height: 100%; }
+
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            margin: 0;
+            position: relative;
+            display: flex;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.05;
+            mix-blend-mode: multiply;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        main {
+            position: relative;
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 80vh;
-            font-size: 1.1rem;
-            line-height: 2;
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .season {
+            font-family: 'Bodoni Moda', Georgia, serif;
+            font-weight: 700;
+            font-style: italic;
+            font-size: clamp(1.8rem, 6vw, 3rem);
+            line-height: 1.1;
         }
     </style>
 </head>
 <body>
 
-<div class="loading-message">
-    Season 2026 loading&hellip;
-</div>
+<main>
+    <div class="season">Season 2026 loading&hellip;</div>
+</main>
 
 </body>
 </html>
