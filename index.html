@@ -72,6 +72,40 @@
         #board .budget.over { color: var(--over); }
         #board .budget.under { color: var(--under); }
         #board .empty { font-size: 0.85rem; color: var(--ink-soft); font-style: italic; }
+        #board .coverage { font-size: 0.78rem; color: var(--ink-soft); margin: 0.7rem 0 0; text-align: center; }
+        .board-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin-top: 0.9rem; }
+        .board-actions button {
+            font-family: 'Bodoni Moda', Georgia, serif;
+            font-size: 0.8rem;
+            background: none;
+            border: 1px solid var(--ink);
+            padding: 0.4rem 0.7rem;
+            cursor: pointer;
+            color: var(--ink);
+        }
+        .board-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        #saved-lineups #saved-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+        #saved-lineups li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem;
+            border-bottom: 1px solid var(--paper-raised);
+            padding-bottom: 0.5rem;
+            cursor: pointer;
+        }
+        #saved-lineups .lineup-name { font-weight: 600; }
+        #saved-lineups .lineup-meta { font-size: 0.72rem; color: var(--ink-soft); }
+        #saved-lineups .delete-btn {
+            background: none;
+            border: none;
+            color: var(--ink-soft);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+        }
+        .saved-empty { font-size: 0.85rem; font-style: italic; color: var(--ink-soft); }
         #board-list {
             list-style: none;
             margin: 0;
@@ -176,9 +210,20 @@
         <div class="budget" id="budget">$0 of $250</div>
         <ul id="board-list"></ul>
         <p class="empty" id="board-empty">No teams selected yet</p>
+        <p class="coverage" id="coverage"></p>
+        <div class="board-actions">
+            <button type="button" id="share-btn" disabled>Share picks</button>
+            <button type="button" id="save-lineup-btn" disabled>Save this lineup</button>
+        </div>
     </section>
 
     <p class="hint">Click teams to select/deselect</p>
+
+    <section id="saved-lineups">
+        <h2>Saved lineups</h2>
+        <ul id="saved-list"></ul>
+        <p class="saved-empty" id="saved-empty">No lineups saved yet</p>
+    </section>
 
     <section class="filters">
         <label>Conference
@@ -288,7 +333,25 @@
         } catch (e) { /* localStorage unavailable, selections just won't persist */ }
     }
 
+    const SAVED_KEY = 'snapcount.savedLineups';
+
+    function loadSavedLineups() {
+        try {
+            const raw = localStorage.getItem(SAVED_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveSavedLineups(list) {
+        try {
+            localStorage.setItem(SAVED_KEY, JSON.stringify(list));
+        } catch (e) { /* localStorage unavailable, saved lineups just won't persist */ }
+    }
+
     let selected = loadSelections();
+    let savedLineups = loadSavedLineups();
     let activeConference = 'All';
     let activeDivision = 'All';
 
@@ -346,6 +409,58 @@
             li.title = team.name;
             li.innerHTML = badgeHTML(team) + '<span class="board-price">$' + team.price + '</span>';
             li.addEventListener('click', () => toggle(team.name));
+            list.appendChild(li);
+        });
+
+        const coverageEl = document.getElementById('coverage');
+        if (picked.length) {
+            const counts = {};
+            picked.forEach(t => {
+                const key = t.conference + ' ' + t.division;
+                counts[key] = (counts[key] || 0) + 1;
+            });
+            coverageEl.textContent = Object.keys(counts).sort().map(k => k + ' ' + counts[k]).join(' · ');
+        } else {
+            coverageEl.textContent = '';
+        }
+
+        document.getElementById('share-btn').disabled = !picked.length;
+        document.getElementById('save-lineup-btn').disabled = !picked.length;
+    }
+
+    function lineupTotal(teamNames) {
+        return teamNames.reduce((sum, name) => {
+            const t = teams.find(x => x.name === name);
+            return sum + (t ? t.price : 0);
+        }, 0);
+    }
+
+    function renderSavedLineups() {
+        const list = document.getElementById('saved-list');
+        const empty = document.getElementById('saved-empty');
+        list.innerHTML = '';
+        empty.style.display = savedLineups.length ? 'none' : 'block';
+
+        savedLineups.forEach((lineup, i) => {
+            const li = document.createElement('li');
+            li.innerHTML =
+                '<div>' +
+                    '<div class="lineup-name">' + lineup.name + '</div>' +
+                    '<div class="lineup-meta">' + lineup.teams.length + ' teams &middot; $' + lineupTotal(lineup.teams) + '</div>' +
+                '</div>' +
+                '<button type="button" class="delete-btn" aria-label="Delete ' + lineup.name + '">&times;</button>';
+            li.addEventListener('click', e => {
+                if (e.target.closest('.delete-btn')) return;
+                selected = new Set(lineup.teams);
+                saveSelections(selected);
+                render();
+            });
+            li.querySelector('.delete-btn').addEventListener('click', e => {
+                e.stopPropagation();
+                savedLineups.splice(i, 1);
+                saveSavedLineups(savedLineups);
+                renderSavedLineups();
+            });
             list.appendChild(li);
         });
     }
@@ -407,6 +522,7 @@
         renderChips();
         renderBoard();
         renderCatalog();
+        renderSavedLineups();
     }
 
     function updateCountdown() {
@@ -417,6 +533,36 @@
         const secs = Math.floor((diff % 60000) / 1000);
         document.getElementById('countdown').textContent = days + 'd ' + hours + 'h ' + mins + 'm ' + secs + 's';
     }
+
+    function shareText(picked, total) {
+        const lines = picked.map(t => t.name + ' ($' + t.price + ')');
+        return 'My Snap-Count picks ($' + total + ' of $' + BUDGET + '):\n' + lines.join('\n');
+    }
+
+    document.getElementById('share-btn').addEventListener('click', async () => {
+        const picked = teams.filter(t => selected.has(t.name));
+        if (!picked.length) return;
+        const total = picked.reduce((sum, t) => sum + t.price, 0);
+        const text = shareText(picked, total);
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: 'Snap-Count picks', text: text });
+            } catch (e) { /* user cancelled the share sheet, nothing to do */ }
+        } else {
+            const subject = encodeURIComponent('My Snap-Count picks');
+            const body = encodeURIComponent(text);
+            window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+        }
+    });
+
+    document.getElementById('save-lineup-btn').addEventListener('click', () => {
+        if (!selected.size) return;
+        const name = window.prompt('Name this lineup:');
+        if (!name) return;
+        savedLineups.push({ name: name, teams: [...selected] });
+        saveSavedLineups(savedLineups);
+        renderSavedLineups();
+    });
 
     render();
     updateCountdown();
