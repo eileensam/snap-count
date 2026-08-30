@@ -346,6 +346,7 @@
     let activeConference = 'All';
     let activeDivision = 'All';
     let activeSort = 'price-desc';
+    let loadedLineupIndex = null;
 
     function toggle(teamName) {
         if (selected.has(teamName)) selected.delete(teamName);
@@ -457,11 +458,14 @@
             li.addEventListener('click', e => {
                 if (e.target.closest('.delete-btn')) return;
                 selected = new Set(lineup.teams);
+                loadedLineupIndex = i;
                 saveSelections(selected);
                 render();
             });
             li.querySelector('.delete-btn').addEventListener('click', e => {
                 e.stopPropagation();
+                if (i === loadedLineupIndex) loadedLineupIndex = null;
+                else if (loadedLineupIndex !== null && i < loadedLineupIndex) loadedLineupIndex--;
                 savedLineups.splice(i, 1);
                 saveSavedLineups(savedLineups);
                 renderSavedLineups();
@@ -550,11 +554,40 @@
         }
     });
 
+    function promptUniqueLineupName() {
+        while (true) {
+            const raw = window.prompt('Name this lineup:');
+            if (!raw) return null;
+            const name = raw.trim();
+            if (!name) return null;
+            if (savedLineups.some(l => l.name.toLowerCase() === name.toLowerCase())) {
+                window.alert('A lineup named "' + name + '" already exists. Choose a different name.');
+                continue;
+            }
+            return name;
+        }
+    }
+
     document.getElementById('save-lineup-btn').addEventListener('click', () => {
         if (!selected.size) return;
-        const name = window.prompt('Name this lineup:');
+
+        if (loadedLineupIndex !== null) {
+            const current = savedLineups[loadedLineupIndex];
+            const updateExisting = window.confirm(
+                'Update "' + current.name + '" with these picks?\n\nCancel to save as a new lineup instead.'
+            );
+            if (updateExisting) {
+                current.teams = [...selected];
+                saveSavedLineups(savedLineups);
+                renderSavedLineups();
+                return;
+            }
+        }
+
+        const name = promptUniqueLineupName();
         if (!name) return;
         savedLineups.push({ name: name, teams: [...selected] });
+        loadedLineupIndex = savedLineups.length - 1;
         saveSavedLineups(savedLineups);
         renderSavedLineups();
     });
@@ -562,6 +595,7 @@
     document.getElementById('clear-btn').addEventListener('click', () => {
         if (!selected.size) return;
         selected = new Set();
+        loadedLineupIndex = null;
         saveSelections(selected);
         render();
     });
