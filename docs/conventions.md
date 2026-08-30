@@ -18,6 +18,10 @@
 
 - No em dashes, anywhere: docs, commit messages, UI copy, chat replies. No punchy ad-copy fragments or slogans. Full, natural sentences. See [design/system.md](design/system.md) for how this extends to visual design (minimal, no unnecessary elements).
 
+## Discuss before building
+
+Agreeing on data and rules (what a feature must do, budget caps, scoring, filters) is not the same as agreeing on UX (how it looks and behaves: layout, interaction model, control scheme, visual hierarchy). Both need to be discussed before writing code for a new page or nontrivial feature. Reaching alignment on the first kind doesn't license building past the second.
+
 ## Visual iteration
 
 Any visual/UI change gets rendered and actually looked at before it's shown to the user, not guessed at from CSS. Iterate until it looks right, then present it.
