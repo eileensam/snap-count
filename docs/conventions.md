@@ -2,7 +2,7 @@
 
 ## Version control
 
-- Commit directly to `main`. No feature branches unless there's a specific reason (e.g. a rewrite that would leave `main` undeployable for a while) — GitHub Pages deploys on every push to `main`, so keep each commit self-contained and deployable.
+- Commit directly to `main`. No feature branches unless there's a specific reason (e.g. a rewrite that would leave `main` undeployable for a while). GitHub Pages deploys on every push to `main`, so keep each commit self-contained and deployable.
 - Commit message prefixes: `[feat]`, `[fix]`, `[docs]`, `[chore]`.
 
 ## Docs
@@ -12,4 +12,8 @@
 
 ## Tooling
 
-- No build step, package manager, or framework by default (matches v1). Introduce one only when there's a concrete reason for that specific piece of work — decide per-feature, not as a blanket rule change.
+- No build step, package manager, or framework by default (matches v1). Introduce one only when there's a concrete reason for that specific piece of work; decide per-feature, not as a blanket rule change.
+
+## Writing
+
+- No em dashes, anywhere: docs, commit messages, UI copy, chat replies. No punchy ad-copy fragments or slogans. Full, natural sentences. See [design/system.md](design/system.md) for how this extends to visual design (minimal, no unnecessary elements).

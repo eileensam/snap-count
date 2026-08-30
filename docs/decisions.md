@@ -1,11 +1,12 @@
 # Decisions
 
-Judgment calls made along the way, and why — so we don't relitigate them.
+Judgment calls made along the way, and why, kept here so we don't relitigate them.
 
-- **No team-count cap in the pool rules.** Only the $250 budget caps a roster. Confirmed 2026-08-30; v1's docs had assumed a fixed 4-team roster, which was wrong for this season (and possibly always was — not verified against pre-2026 seasons).
+- **No team-count cap in the pool rules.** Only the $250 budget caps a roster. Confirmed 2026-08-30; v1's docs had assumed a fixed 4-team roster, which was wrong for this season (and possibly always was, not verified against pre-2026 seasons).
 - **Snap-Count does not track money.** Entry fees and prize payouts stay the commissioner's manual process. The site only ever shows wins/points/rank.
 - **v1 archived via git tag only (`v1-2025-season`), not a browsable path.** Simpler than maintaining a live archive page; git history is sufficient.
-- **Pick-helper is explicitly not a recommendation engine.** Shows data (price, division, budget math) and lets the player draw conclusions, rather than ranking or suggesting a lineup — avoids steering people's picks in a competitive pool.
-- **No build step/framework by default for v2**, same as v1 — only add tooling with a concrete reason for the specific piece of work being built.
-- **Repo stays public on GitHub Pages, stays static.** Considered GitHub Pro (private repo + Pages) and Railway (already-paid hosting) to go private; decided against for now — no concrete need. Revisit only if the pick-helper needs to become a shared submission mechanism (tracking who's actually submitted picks across players, not just personal exploration) — that would need persisted shared state localStorage can't provide.
+- **Pick-helper is explicitly not a recommendation engine.** Shows data (price, division, budget math) and lets the player draw conclusions, rather than ranking or suggesting a lineup. This avoids steering people's picks in a competitive pool.
+- **No build step/framework by default for v2**, same as v1; only add tooling with a concrete reason for the specific piece of work being built.
+- **Repo stays public on GitHub Pages, stays static.** Considered GitHub Pro (private repo + Pages) and Railway (already-paid hosting) to go private; decided against for now, no concrete need. Revisit only if the pick-helper needs to become a shared submission mechanism (tracking who's actually submitted picks across players, not just personal exploration): that would need persisted shared state localStorage can't provide.
 - **Phase 1 replaces `index.html`** as the homepage immediately, rather than living at a separate path alongside the old leaderboard. No live season data exists right now, so the old leaderboard has nothing current to show.
+- **Vintage sports magazine aesthetic over the initial pixel-art and catalog-ephemera directions.** See [design/system.md](design/system.md) for the settled system; the rejected directions and why are worth knowing so they don't get re-proposed: 8-bit pixel font read as a dated, played-out kind of retro; a mail-order catalog register (product codes, stamps, dotted-leader price lists) overindexed on one narrow slice of the inspiration and read as fussier than intended.

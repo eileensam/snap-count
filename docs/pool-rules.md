@@ -4,7 +4,7 @@ Snap-Count tracks a friend-group NFL pool that started in 1997, using a format f
 
 ## Entry
 
-- $25 entry fee per player, paid to the commissioner (not tracked by this site — see [decisions.md](decisions.md))
+- $25 entry fee per player, paid to the commissioner (not tracked by this site, see [decisions.md](decisions.md))
 - Each player picks any number of teams whose combined price is ≤ $250. No cap on team count.
 - Prices are set each season by the commissioner from current betting markets. This year's prices and pick deadline live in [roadmap.md](roadmap.md) (season-specific, so not duplicated here).
 
@@ -23,7 +23,7 @@ Snap-Count tracks a friend-group NFL pool that started in 1997, using a format f
 
 ## Groups
 
-- **Full League** — everyone in the pool, historically ~20+ participants.
-- **Small Group** — a more engaged, competitive subset within the Full League. Checks the site more often; the leaderboard highlights their standings distinctly.
+- **Full League**: everyone in the pool, historically ~20+ participants.
+- **Small Group**: a more engaged, competitive subset within the Full League. Checks the site more often; the leaderboard highlights their standings distinctly.
 
 Both groups use the same site and the same rules above.
