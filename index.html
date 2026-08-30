@@ -527,7 +527,7 @@
 
     function shareText(picked, total) {
         const lines = picked.map(t => t.name + ' ($' + t.price + ')');
-        return 'My Snap-Count picks ($' + total + ' of $' + BUDGET + '):\n' + lines.join('\n');
+        return 'My choices for the 2026-2027 Miller Family Football Pool are ($' + total + '/$' + BUDGET + '):\n' + lines.join('\n');
     }
 
     document.getElementById('share-btn').addEventListener('click', async () => {
@@ -537,10 +537,10 @@
         const text = shareText(picked, total);
         if (navigator.share) {
             try {
-                await navigator.share({ title: 'Snap-Count picks', text: text });
+                await navigator.share({ title: '2026-2027 Miller Family Football Pool picks', text: text });
             } catch (e) { /* user cancelled the share sheet, nothing to do */ }
         } else {
-            const subject = encodeURIComponent('My Snap-Count picks');
+            const subject = encodeURIComponent('2026-2027 Miller Family Football Pool picks');
             const body = encodeURIComponent(text);
             window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
         }
