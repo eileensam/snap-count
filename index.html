@@ -204,6 +204,8 @@
         <div class="board-actions">
             <button type="button" id="share-btn" disabled>Share picks</button>
             <button type="button" id="save-lineup-btn" disabled>Save this lineup</button>
+            <button type="button" id="update-lineup-btn" disabled hidden></button>
+            <button type="button" id="save-as-new-btn" disabled hidden>Save as new</button>
             <button type="button" id="clear-btn" disabled>Clear selections</button>
         </div>
     </section>
@@ -426,8 +428,24 @@
         }
 
         document.getElementById('share-btn').disabled = !picked.length;
-        document.getElementById('save-lineup-btn').disabled = !picked.length;
         document.getElementById('clear-btn').disabled = !picked.length;
+
+        const saveBtn = document.getElementById('save-lineup-btn');
+        const updateBtn = document.getElementById('update-lineup-btn');
+        const saveAsNewBtn = document.getElementById('save-as-new-btn');
+        const loaded = loadedLineupIndex !== null ? savedLineups[loadedLineupIndex] : null;
+
+        saveBtn.hidden = !!loaded;
+        updateBtn.hidden = !loaded;
+        saveAsNewBtn.hidden = !loaded;
+
+        if (loaded) {
+            updateBtn.textContent = 'Update "' + loaded.name + '"';
+            updateBtn.disabled = !picked.length;
+            saveAsNewBtn.disabled = !picked.length;
+        } else {
+            saveBtn.disabled = !picked.length;
+        }
     }
 
     function escapeHTML(str) {
@@ -570,26 +588,31 @@
 
     document.getElementById('save-lineup-btn').addEventListener('click', () => {
         if (!selected.size) return;
-
-        if (loadedLineupIndex !== null) {
-            const current = savedLineups[loadedLineupIndex];
-            const updateExisting = window.confirm(
-                'Update "' + current.name + '" with these picks?\n\nCancel to save as a new lineup instead.'
-            );
-            if (updateExisting) {
-                current.teams = [...selected];
-                saveSavedLineups(savedLineups);
-                renderSavedLineups();
-                return;
-            }
-        }
-
         const name = promptUniqueLineupName();
         if (!name) return;
         savedLineups.push({ name: name, teams: [...selected] });
         loadedLineupIndex = savedLineups.length - 1;
         saveSavedLineups(savedLineups);
         renderSavedLineups();
+        renderBoard();
+    });
+
+    document.getElementById('update-lineup-btn').addEventListener('click', () => {
+        if (!selected.size || loadedLineupIndex === null) return;
+        savedLineups[loadedLineupIndex].teams = [...selected];
+        saveSavedLineups(savedLineups);
+        renderSavedLineups();
+    });
+
+    document.getElementById('save-as-new-btn').addEventListener('click', () => {
+        if (!selected.size) return;
+        const name = promptUniqueLineupName();
+        if (!name) return;
+        savedLineups.push({ name: name, teams: [...selected] });
+        loadedLineupIndex = savedLineups.length - 1;
+        saveSavedLineups(savedLineups);
+        renderSavedLineups();
+        renderBoard();
     });
 
     document.getElementById('clear-btn').addEventListener('click', () => {
