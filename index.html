@@ -2,93 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Snap-Count</title>
 
-    <!-- Styles -->
     <link href="css/style.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Page entrypoint -->
-    <script src="js/pages/index.js" type="module"></script>
+    <style>
+        .loading-message {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            font-size: 1.1rem;
+            line-height: 2;
+        }
+    </style>
 </head>
 <body>
 
-<div id="header-container"></div>
-
-<br>
-
-<!-- Group Toggle -->
-<div class="group-toggle" id="group-toggle">
-    <label>
-        <input checked name="leaderboard-group" type="radio" value="snap">
-        Small Group
-    </label>
-    <label>
-        <input name="leaderboard-group" type="radio" value="all">
-        Full League
-    </label>
-</div>
-
-<br>
-
-<!-- Leaderboard -->
-<section id="leaderboard">
-    <h2>Leaderboard</h2>
-    <table id="leaderboard-table">
-        <thead>
-        <tr>
-            <th>Rank</th>
-            <th>Player</th>
-            <th>Total Points</th>
-            <th>Rank Delta</th>
-        </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</section>
-
-<!-- Leaderboard Chart -->
-<section id="leaderboard-graph">
-    <canvas id="leaderboardChart"></canvas>
-</section>
-
-<br>
-
-<!-- Player Breakdown -->
-<section id="player-breakdown">
-    <h2>Player Breakdown</h2>
-
-    <label for="player-select">Select Player:</label>
-    <select id="player-select"></select>
-
-    <label for="week-select">Select Week:</label>
-    <select id="week-select"></select>
-
-    <table id="player-table">
-        <thead>
-        <tr>
-            <th>Team</th>
-            <th>Opponent</th>
-            <th>Score</th>
-            <th>Result</th>
-            <th>Points</th>
-            <th>WP</th>
-        </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</section>
-
-<hr class="divider">
-
-<div class="fun-fact" id="nfl-fun-fact">
-    Who will win the
-    <a href="https://www.cbssports.com/nfl/news/patriots-seahawks-best-nfl-betting-apps-betting-sites-sportsbook-promo-codes-for-2026-big-game/"
-       rel="noopener noreferrer" target="_blank">big game</a>
-    ? The #1 defense in the NFL or Drake "Drake Maye" Maye?
+<div class="loading-message">
+    Season 2026 loading&hellip;
 </div>
 
 </body>
