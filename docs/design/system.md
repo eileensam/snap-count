@@ -22,26 +22,24 @@ Vintage sports aesthetic, closer to a 1960s program or magazine masthead than a 
 
 The five content colors exist only to represent something real (a team, a leader, a warning). They never appear as generic UI accents.
 
+On the pick-helper, over-budget and under-budget states use Brick and Forest directly (`--over`, `--under`). Each team's badge is bordered in that team's own dominant brand color, extracted from its logo, rather than drawn from the five-color set. This is a specific instance of the same rule (color represents something real), not an exception to it.
+
 ## Type
 
 Two typefaces, both from Google Fonts:
 
-- **Display: [Bodoni Moda](https://fonts.google.com/specimen/Bodoni+Moda)**, weight 700, italic. High-contrast Didone serif. Used for headlines and the wordmark, sparingly, this carries the page's one big visual moment.
-- **Body/UI: [Jost](https://fonts.google.com/specimen/Jost)**, weights 400-600. Geometric sans in the spirit of Vogue's own 1930s masthead face. Used for everything meant to be read or used: body copy, labels, numerals (with `font-variant-numeric: tabular-nums` wherever digits line up).
+- **Display: [Oswald](https://fonts.google.com/specimen/Oswald)**, weight 500-600, uppercase where used. A modern revival of Alternate Gothic, the condensed sans seen on vintage American sports posters and team programs. Used for headlines, the wordmark, section labels, and any large or emphasized numeral (the countdown, prices), with `font-variant-numeric: tabular-nums` wherever digits line up.
+- **Body/UI: [Bodoni Moda](https://fonts.google.com/specimen/Bodoni+Moda)**, weights 400-700, italic used for emphasis. High-contrast Didone serif, the same face historically paired with Vogue magazine's own masthead. Used for everything meant to be read at length: body copy, team names, filter labels, captions.
 
-Origin: the pairing is a deliberate echo of Vogue magazine's own historical identity, which combined Bodoni display type with a geometric sans.
+See [decisions.md](../decisions.md) for how this pairing (and which face carries "big" vs. "small" text) was arrived at.
 
 ## Wordmark
 
-`SNAP-COUNT`, all caps, hyphen (not a dot or space), set in the display face. The interpunct collided visually with Bodoni's italic swashes; the hyphen sits cleanly.
-
-## Texture
-
-A faint paper-grain overlay (`feTurbulence` SVG, ~5% opacity, `mix-blend-mode: multiply`) on the page background. Subtle enough to not affect readability.
+`SNAP-COUNT`, all caps, hyphen (not a dot or space), set in the display face.
 
 ## Reference implementation
 
-`index.html` is the first real page built on this system, a single static line of Bodoni italic on cream paper. Use it as the starting point for structure (fonts loaded via `<link>`, tokens as CSS custom properties, the grain overlay as a `body::before`).
+`index.html` (the Phase 1 pick-helper) is the reference implementation: fonts loaded via `<link>`, tokens as CSS custom properties, real vintage team logo badges bordered in each team's extracted brand color, a hand-drawn circle (not a checkmark) as the selection indicator.
 
 ## What this superseded
 
