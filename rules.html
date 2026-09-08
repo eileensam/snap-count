@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Snap-Count</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;0,700;1,700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper: #f6efd9;
+            --paper-raised: #fbf6e9;
+            --ink: #16130d;
+            --ink-soft: #6b6350;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'Bodoni Moda', Georgia, serif;
+            margin: 0;
+            padding: 1.2rem;
+        }
+        .wrap { max-width: 640px; margin: 0 auto; }
+
+        .header { text-align: center; margin-bottom: 0.4rem; }
+        .wordmark {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 1.9rem;
+            margin: 0 0 0.3rem;
+        }
+        .page-nav { font-size: 0.78rem; margin: 0 0 1.6rem; }
+        .page-nav a { color: var(--ink-soft); }
+
+        .lede {
+            font-style: italic;
+            color: var(--ink-soft);
+            font-size: 0.95rem;
+            margin: 0 0 2rem;
+            text-align: center;
+        }
+
+        .section-heading {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            font-size: 1.05rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin: 2.2rem 0 0.7rem;
+        }
+        .section-heading:first-of-type { margin-top: 0; }
+
+        ul { margin: 0; padding-left: 1.2rem; }
+        li { margin-bottom: 0.5rem; }
+        li:last-child { margin-bottom: 0; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="header">
+        <div class="wordmark">Snap-Count</div>
+        <p class="page-nav"><a href="index.html">Pool site</a> &middot; <a href="team-picker.html">Team Picker</a></p>
+    </div>
+
+    <p class="lede">This pool has run since 1997, on a format from a Forbes magazine article.</p>
+
+    <div class="section-heading">Scoring</div>
+    <ul>
+        <li>Regular season: 1 point per win, 0.5 per tie</li>
+        <li>Regular-season points carry into the postseason</li>
+        <li>Postseason: 3 points per wildcard-round win, 3 per divisional-round win, 5 per conference championship win, 5 for the Super Bowl win</li>
+    </ul>
+
+    <div class="section-heading">Prizes</div>
+    <ul>
+        <li>Highest regular-season point total alone (excluding postseason points) wins 10% of the pot</li>
+        <li>Overall winner (regular season plus postseason combined) wins 75%</li>
+        <li>Overall 2nd place wins 10%</li>
+        <li>Lowest overall scorer gets a 5% "booby prize"</li>
+    </ul>
+</div>
+</body>
+</html>

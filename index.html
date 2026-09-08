@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Snap-Count</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;0,700;1,700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper: #f6efd9;
+            --paper-raised: #fbf6e9;
+            --ink: #16130d;
+            --ink-soft: #6b6350;
+            --over: #a5382a;
+            --under: #2c5a3b;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'Bodoni Moda', Georgia, serif;
+            margin: 0;
+            padding: 1.2rem;
+        }
+        .wrap { max-width: 640px; margin: 0 auto; }
+
+        .header { text-align: center; margin-bottom: 0.4rem; }
+        .wordmark {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 1.9rem;
+            margin: 0 0 0.3rem;
+        }
+        .week-tag {
+            font-style: italic;
+            font-size: 0.95rem;
+            color: var(--ink-soft);
+            margin: 0 0 0.4rem;
+        }
+        .page-nav { font-size: 0.78rem; margin: 0 0 1.6rem; }
+        .page-nav a { color: var(--ink-soft); }
+
+        .section-heading {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            font-size: 1.05rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin: 2.2rem 0 0.5rem;
+        }
+        .section-heading:first-of-type { margin-top: 0; }
+
+        /* games this week */
+        .games { border-top: 1.5px solid var(--ink); margin: 0 0 2rem; }
+        .game-row { padding: 0.6rem 0.1rem; border-bottom: 1px solid #ddd0ab; }
+        .game-meta {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-size: 0.62rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin-bottom: 0.4rem;
+        }
+        .game-stake { color: var(--ink); font-weight: 600; }
+        .game-teams {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .game-badge {
+            width: 1.7rem;
+            height: 1.7rem;
+            border-radius: 50%;
+            border: 1.5px solid var(--team, var(--ink));
+            object-fit: cover;
+            background: var(--paper-raised);
+            flex-shrink: 0;
+        }
+        .game-badge-placeholder {
+            width: 1.7rem;
+            height: 1.7rem;
+            border-radius: 50%;
+            border: 1.5px solid var(--team, var(--ink));
+            background: var(--paper-raised);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-size: 0.5rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .game-at { color: var(--ink-soft); font-style: italic; font-size: 0.78rem; font-weight: 400; }
+        .game-score { font-variant-numeric: tabular-nums; }
+        .games-empty, .lb-empty {
+            font-size: 0.85rem;
+            color: var(--ink-soft);
+            font-style: italic;
+            text-align: center;
+            padding: 1.4rem 0;
+            margin: 0;
+        }
+
+        /* leaderboard */
+        .leaderboard { border-top: 1.5px solid var(--ink); }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="header">
+        <div class="wordmark">Snap-Count</div>
+        <p class="week-tag" id="week-tag">&hellip;</p>
+        <p class="page-nav"><a href="rules.html">Rules</a> &middot; <a href="team-picker.html">Team Picker</a></p>
+    </div>
+
+    <div class="section-heading">Games this week</div>
+    <div class="games" id="games">
+        <p class="games-empty">Loading&hellip;</p>
+    </div>
+
+    <div class="section-heading">Leaderboard</div>
+    <div class="leaderboard">
+        <p class="lb-empty">Awaiting picks&hellip;</p>
+    </div>
+</div>
+
+<script>
+    const LOGOS = {};
+    ['ari', 'atl', 'bal', 'buf', 'car', 'chi', 'cin', 'cle', 'dal', 'den', 'det', 'gb', 'hou', 'ind',
+     'jax', 'kc', 'lac', 'lar', 'lv', 'mia', 'min', 'ne', 'no', 'nyg', 'nyj', 'phi', 'pit', 'sea', 'sf', 'tb', 'ten', 'wsh']
+        .forEach(abbr => { LOGOS[abbr] = 'assets/logos/' + abbr + '.png'; });
+
+    const BORDER_COLORS = {
+        ari: '#802030', atl: '#16130d', bal: '#907000', buf: '#d00000', car: '#0070b0',
+        chi: '#001020', cin: '#f03000', cle: '#300000', dal: '#002050', den: '#f04010',
+        det: '#0030a0', gb: '#16130d', hou: '#001030', ind: '#001070', jax: '#c08000',
+        kc: '#c01020', lac: '#001070', lar: '#002060', lv: '#16130d', mia: '#007070',
+        min: '#f0b000', ne: '#c00020', no: '#16130d', nyg: '#001070', nyj: '#006030',
+        phi: '#006030', pit: '#f0b000', sea: '#003080', sf: '#c02020', tb: '#c01020',
+        ten: '#4080d0', wsh: '#501010'
+    };
+
+    // Point stakes: regular season is always 1 win = 1 point (docs/pool-rules.md).
+    // Postseason round scoring (3/3/5/5) isn't wired up yet, not needed until the
+    // playoffs; see docs/roadmap.md for this as an open item.
+    function stakeFor(seasonType) {
+        return seasonType === 'Regular Season' ? '1 PT' : '—';
+    }
+
+    function badgeEl(abbr, teamName) {
+        const color = BORDER_COLORS[abbr] || '#16130d';
+        if (LOGOS[abbr]) {
+            const img = document.createElement('img');
+            img.className = 'game-badge';
+            img.style.setProperty('--team', color);
+            img.src = LOGOS[abbr];
+            img.alt = teamName;
+            return img;
+        }
+        const div = document.createElement('div');
+        div.className = 'game-badge-placeholder';
+        div.style.setProperty('--team', color);
+        div.textContent = abbr.toUpperCase();
+        return div;
+    }
+
+    function formatKickoff(iso) {
+        const d = new Date(iso);
+        const day = d.toLocaleDateString('en-US', { weekday: 'short' });
+        const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        return day + ' · ' + time;
+    }
+
+    function gameRow(game, stake) {
+        const row = document.createElement('div');
+        row.className = 'game-row';
+
+        const meta = document.createElement('div');
+        meta.className = 'game-meta';
+        const metaLeft = document.createElement('span');
+        metaLeft.textContent = game.state === 'pre' ? formatKickoff(game.date) : game.statusDetail;
+        const metaRight = document.createElement('span');
+        metaRight.className = 'game-stake';
+        metaRight.textContent = stake;
+        meta.appendChild(metaLeft);
+        meta.appendChild(metaRight);
+        row.appendChild(meta);
+
+        const teamsEl = document.createElement('div');
+        teamsEl.className = 'game-teams';
+        const started = game.state !== 'pre';
+
+        const awayName = document.createElement('span');
+        awayName.textContent = game.away.name;
+        const at = document.createElement('span');
+        at.className = 'game-at';
+        at.textContent = 'at';
+        const homeName = document.createElement('span');
+        homeName.textContent = game.home.name;
+
+        teamsEl.appendChild(badgeEl(game.away.abbr, game.away.name));
+        teamsEl.appendChild(awayName);
+        if (started) {
+            const awayScore = document.createElement('span');
+            awayScore.className = 'game-score';
+            awayScore.textContent = game.away.score;
+            teamsEl.appendChild(awayScore);
+        }
+        teamsEl.appendChild(at);
+        if (started) {
+            const homeScore = document.createElement('span');
+            homeScore.className = 'game-score';
+            homeScore.textContent = game.home.score;
+            teamsEl.appendChild(homeScore);
+        }
+        teamsEl.appendChild(homeName);
+        teamsEl.appendChild(badgeEl(game.home.abbr, game.home.name));
+
+        row.appendChild(teamsEl);
+        return row;
+    }
+
+    async function fetchCurrentWeekInfo() {
+        const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return { week: data.week.number, seasonType: data.leagues[0].season.type.name };
+    }
+
+    async function fetchWeekGames(week) {
+        const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=' + week);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return data.events.map(event => {
+            const comp = event.competitions[0];
+            const home = comp.competitors.find(c => c.homeAway === 'home');
+            const away = comp.competitors.find(c => c.homeAway === 'away');
+            return {
+                date: event.date,
+                state: event.status.type.state,
+                statusDetail: event.status.type.shortDetail,
+                home: { name: home.team.shortDisplayName, abbr: home.team.abbreviation.toLowerCase(), score: home.score },
+                away: { name: away.team.shortDisplayName, abbr: away.team.abbreviation.toLowerCase(), score: away.score }
+            };
+        });
+    }
+
+    async function initGamesThisWeek() {
+        const gamesEl = document.getElementById('games');
+        const weekTagEl = document.getElementById('week-tag');
+
+        function showGamesError() {
+            gamesEl.innerHTML = '';
+            const empty = document.createElement('p');
+            empty.className = 'games-empty';
+            empty.textContent = 'Games unavailable right now.';
+            gamesEl.appendChild(empty);
+        }
+
+        let week, seasonType;
+        try {
+            ({ week, seasonType } = await fetchCurrentWeekInfo());
+            weekTagEl.textContent = seasonType === 'Regular Season' ? 'Week ' + week : seasonType;
+        } catch (err) {
+            console.error('Failed to load current week info:', err);
+            weekTagEl.textContent = '';
+            showGamesError();
+            return;
+        }
+
+        try {
+            const games = await fetchWeekGames(week);
+            const stake = stakeFor(seasonType);
+
+            gamesEl.innerHTML = '';
+            if (!games.length) {
+                const empty = document.createElement('p');
+                empty.className = 'games-empty';
+                empty.textContent = 'No games scheduled.';
+                gamesEl.appendChild(empty);
+                return;
+            }
+            games.forEach(game => gamesEl.appendChild(gameRow(game, stake)));
+        } catch (err) {
+            console.error('Failed to load this week\'s games:', err);
+            showGamesError();
+        }
+    }
+
+    initGamesThisWeek();
+</script>
+</body>
+</html>
