@@ -122,6 +122,15 @@
             color: var(--ink-soft);
             margin-bottom: 0.5rem;
         }
+        .scorebug-status.live { color: var(--under); }
+        .scorebug-live-dot {
+            display: inline-block;
+            width: 0.4rem;
+            height: 0.4rem;
+            border-radius: 50%;
+            background: var(--under);
+            margin-right: 0.35rem;
+        }
         .scorebug-team {
             display: flex;
             align-items: center;
@@ -500,9 +509,14 @@
         bug.className = 'scorebug';
 
         const status = document.createElement('div');
-        status.className = 'scorebug-status';
+        status.className = 'scorebug-status' + (game.state === 'in' ? ' live' : '');
         const statusLeft = document.createElement('span');
-        statusLeft.textContent = game.statusDetail;
+        if (game.state === 'in') {
+            const dot = document.createElement('span');
+            dot.className = 'scorebug-live-dot';
+            statusLeft.appendChild(dot);
+        }
+        statusLeft.appendChild(document.createTextNode(game.statusDetail));
         const statusRight = document.createElement('span');
         statusRight.className = 'game-stake';
         statusRight.textContent = stake;

@@ -33,6 +33,12 @@
             font-size: 1.9rem;
             margin: 0 0 0.3rem;
         }
+        .week-tag {
+            font-style: italic;
+            font-size: 0.95rem;
+            color: var(--ink-soft);
+            margin: 0 0 0.4rem;
+        }
         .page-nav { font-size: 0.78rem; margin: 0 0 1.6rem; }
         .page-nav a { color: var(--ink-soft); }
         .page-nav .current { color: var(--ink); font-weight: 700; }
@@ -65,6 +71,7 @@
 <div class="wrap">
     <div class="header">
         <div class="wordmark">Snap-Count</div>
+        <p class="week-tag" id="week-tag">&hellip;</p>
         <p class="page-nav"><a href="index.html">Home</a> &middot; <span class="current">Rules</span></p>
     </div>
 
@@ -85,5 +92,24 @@
         <li>Lowest overall scorer gets a 5% "booby prize"</li>
     </ul>
 </div>
+
+<script>
+    async function initWeekTag() {
+        const weekTagEl = document.getElementById('week-tag');
+        try {
+            const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            const week = data.week.number;
+            const seasonType = data.leagues[0].season.type.name;
+            weekTagEl.textContent = seasonType === 'Regular Season' ? 'Week ' + week + ' · ' + seasonType : seasonType;
+        } catch (err) {
+            console.error('Failed to load current week info:', err);
+            weekTagEl.textContent = '';
+        }
+    }
+
+    initWeekTag();
+</script>
 </body>
 </html>
