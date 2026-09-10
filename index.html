@@ -15,6 +15,7 @@
             --ink-soft: #6b6350;
             --over: #a5382a;
             --under: #2c5a3b;
+            --sg: #1e3a5c;
         }
         * { box-sizing: border-box; }
         body {
@@ -43,6 +44,7 @@
         }
         .page-nav { font-size: 0.78rem; margin: 0 0 1.6rem; }
         .page-nav a { color: var(--ink-soft); }
+        .page-nav .current { color: var(--ink); font-weight: 700; }
 
         .section-heading {
             font-family: 'Oswald', 'Arial Narrow', sans-serif;
@@ -62,7 +64,7 @@
             display: flex;
             justify-content: space-between;
             font-family: 'Oswald', 'Arial Narrow', sans-serif;
-            font-size: 0.62rem;
+            font-size: 0.72rem;
             letter-spacing: 0.04em;
             text-transform: uppercase;
             color: var(--ink-soft);
@@ -102,6 +104,42 @@
         }
         .game-at { color: var(--ink-soft); font-style: italic; font-size: 0.78rem; font-weight: 400; }
         .game-score { font-variant-numeric: tabular-nums; }
+
+        /* scorebug: live/final games */
+        .scorebug {
+            border: 1.5px solid var(--ink);
+            border-radius: 4px;
+            background: var(--paper-raised);
+            padding: 0.55rem 0.7rem 0.6rem;
+        }
+        .scorebug-status {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-size: 0.72rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin-bottom: 0.5rem;
+        }
+        .scorebug-team {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0;
+            color: var(--ink-soft);
+        }
+        .scorebug-team + .scorebug-team { border-top: 1px solid #ddd0ab; }
+        .scorebug-team.leading { color: var(--ink); }
+        .scorebug-name { flex: 1; font-weight: 700; font-size: 0.95rem; }
+        .scorebug-score {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            font-size: 1.3rem;
+            min-width: 1.7rem;
+            text-align: right;
+        }
         .games-empty, .lb-empty {
             font-size: 0.85rem;
             color: var(--ink-soft);
@@ -112,7 +150,54 @@
         }
 
         /* leaderboard */
-        .leaderboard { border-top: 1.5px solid var(--ink); }
+        .leaderboard { border-top: 1.5px solid var(--ink); margin: 0 0 2rem; }
+        .lb-row {
+            display: block;
+            width: 100%;
+            background: none;
+            border: none;
+            border-bottom: 1px solid #ddd0ab;
+            padding: 0.55rem 0.1rem;
+            font: inherit;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .lb-row-main { display: flex; align-items: baseline; gap: 0.6rem; }
+        .lb-rank {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--ink-soft);
+            width: 1.4rem;
+            flex-shrink: 0;
+        }
+        .lb-name { flex: 1; font-weight: 700; font-size: 0.95rem; }
+        .lb-star { color: var(--sg); font-size: 0.85rem; flex-shrink: 0; }
+        .lb-points {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+        .lb-chevron {
+            color: var(--ink-soft);
+            font-size: 0.7rem;
+            width: 0.9rem;
+            flex-shrink: 0;
+            text-align: center;
+        }
+        .lb-picks {
+            display: none;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.6rem 0 0.1rem 2rem;
+        }
+        .lb-row.expanded .lb-picks { display: flex; }
+        .lb-pick { display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; }
+        .lb-pick .game-badge, .lb-pick .game-badge-placeholder { width: 1.3rem; height: 1.3rem; font-size: 0.4rem; }
     </style>
 </head>
 <body>
@@ -120,17 +205,17 @@
     <div class="header">
         <div class="wordmark">Snap-Count</div>
         <p class="week-tag" id="week-tag">&hellip;</p>
-        <p class="page-nav"><a href="rules.html">Rules</a> &middot; <a href="team-picker.html">Team Picker</a></p>
+        <p class="page-nav"><span class="current">Home</span> &middot; <a href="rules.html">Rules</a></p>
+    </div>
+
+    <div class="section-heading">Leaderboard</div>
+    <div class="leaderboard" id="leaderboard">
+        <p class="lb-empty">Loading&hellip;</p>
     </div>
 
     <div class="section-heading">Games this week</div>
     <div class="games" id="games">
         <p class="games-empty">Loading&hellip;</p>
-    </div>
-
-    <div class="section-heading">Leaderboard</div>
-    <div class="leaderboard">
-        <p class="lb-empty">Awaiting picks&hellip;</p>
     </div>
 </div>
 
@@ -157,6 +242,185 @@
         return seasonType === 'Regular Season' ? '1 PT' : '—';
     }
 
+    const TEAM_ABBR = {
+        'Arizona': 'ari', 'Atlanta': 'atl', 'Baltimore': 'bal', 'Buffalo': 'buf', 'Carolina': 'car',
+        'Chicago': 'chi', 'Cincinnati': 'cin', 'Cleveland': 'cle', 'Dallas': 'dal', 'Denver': 'den',
+        'Detroit': 'det', 'Green Bay': 'gb', 'Houston': 'hou', 'Indianapolis': 'ind', 'Jacksonville': 'jax',
+        'Kansas City': 'kc', 'Los Angeles (Chargers)': 'lac', 'Los Angeles (Rams)': 'lar', 'Las Vegas': 'lv',
+        'Miami': 'mia', 'Minnesota': 'min', 'New England': 'ne', 'New Orleans': 'no',
+        'New York (Giants)': 'nyg', 'New York (Jets)': 'nyj', 'Philadelphia': 'phi', 'Pittsburgh': 'pit',
+        'Seattle': 'sea', 'San Francisco': 'sf', 'Tampa': 'tb', 'Tennessee': 'ten', 'Washington': 'wsh'
+    };
+
+    const TEAM_FULL_NAME = {
+        ari: 'Arizona', atl: 'Atlanta', bal: 'Baltimore', buf: 'Buffalo', car: 'Carolina', chi: 'Chicago',
+        cin: 'Cincinnati', cle: 'Cleveland', dal: 'Dallas', den: 'Denver', det: 'Detroit', gb: 'Green Bay',
+        hou: 'Houston', ind: 'Indianapolis', jax: 'Jacksonville', kc: 'Kansas City', lac: 'LA Chargers',
+        lar: 'LA Rams', lv: 'Las Vegas', mia: 'Miami', min: 'Minnesota', ne: 'New England', no: 'New Orleans',
+        nyg: 'NY Giants', nyj: 'NY Jets', phi: 'Philadelphia', pit: 'Pittsburgh', sea: 'Seattle',
+        sf: 'San Francisco', tb: 'Tampa Bay', ten: 'Tennessee', wsh: 'Washington'
+    };
+
+    function team(name, price) {
+        return { name, abbr: TEAM_ABBR[name], price };
+    }
+
+    // 2026 season picks. Small Group is the more engaged subset called out in
+    // docs/pool-rules.md; the leaderboard marks them but ranks everyone together.
+    const SMALL_GROUP = new Set(['Erika', 'Chris R.', 'Emma', 'Eileen', 'Sean R.']);
+
+    const POOL = [
+        { player: 'Abby', teams: [team('Baltimore', 70), team('Green Bay', 50), team('New Orleans', 35), team('Pittsburgh', 40), team('San Francisco', 55)] },
+        { player: 'Ben', teams: [team('Arizona', 10), team('Atlanta', 35), team('Cleveland', 25), team('Indianapolis', 35), team('Las Vegas', 25), team('Miami', 15), team('Minnesota', 40), team('Tennessee', 30), team('Washington', 35)] },
+        { player: 'Chris R.', teams: [team('Baltimore', 70), team('Carolina', 35), team('Jacksonville', 50), team('New York (Giants)', 35), team('San Francisco', 55)] },
+        { player: 'Chris V.', teams: [team('Arizona', 10), team('Denver', 50), team('Miami', 15), team('New England', 55), team('San Francisco', 55), team('Seattle', 60)] },
+        { player: 'Dad', teams: [team('Baltimore', 70), team('Denver', 50), team('Detroit', 55), team('Miami', 15), team('Philadelphia', 60)] },
+        { player: 'Eileen', teams: [team('Baltimore', 70), team('Buffalo', 65), team('Detroit', 55), team('Philadelphia', 60)] },
+        { player: 'Emma', teams: [team('Atlanta', 35), team('Baltimore', 70), team('Cincinnati', 55), team('Detroit', 55), team('Washington', 35)] },
+        { player: 'Eric', teams: [team('Arizona', 10), team('Carolina', 35), team('Cleveland', 25), team('Denver', 50), team('Indianapolis', 35), team('Las Vegas', 25), team('Miami', 15), team('New York (Jets)', 25), team('Tennessee', 30)] },
+        { player: 'Erika', teams: [team('Buffalo', 65), team('Denver', 50), team('Detroit', 55), team('Los Angeles (Rams)', 80)] },
+        { player: 'Jackson', teams: [team('Atlanta', 35), team('Buffalo', 65), team('Chicago', 50), team('Green Bay', 50), team('Miami', 15), team('New York (Giants)', 35)] },
+        { player: 'Mom', teams: [team('Buffalo', 65), team('Green Bay', 50), team('Indianapolis', 35), team('Minnesota', 40), team('Seattle', 60)] },
+        { player: 'Pete', teams: [team('Arizona', 10), team('Denver', 50), team('Houston', 55), team('Los Angeles (Rams)', 80), team('New England', 55)] },
+        { player: 'Phyllis', teams: [team('Baltimore', 70), team('Dallas', 50), team('Houston', 55), team('Indianapolis', 35), team('Pittsburgh', 40)] },
+        { player: 'Scott', teams: [team('Arizona', 10), team('Detroit', 55), team('Houston', 55), team('Los Angeles (Rams)', 80), team('Miami', 15), team('Washington', 35)] },
+        { player: 'Sean B.', teams: [team('Buffalo', 65), team('Detroit', 55), team('Miami', 15), team('New England', 55), team('Seattle', 60)] },
+        { player: 'Sean R.', teams: [team('Baltimore', 70), team('Buffalo', 65), team('Detroit', 55), team('Philadelphia', 60)] },
+        { player: 'Stacy', teams: [team('Arizona', 10), team('Buffalo', 65), team('Cincinnati', 55), team('Green Bay', 50), team('Las Vegas', 25), team('Tampa', 40)] },
+        { player: 'Stephen', teams: [team('Buffalo', 65), team('Chicago', 50), team('Dallas', 50), team('Jacksonville', 50), team('New Orleans', 35)] },
+        { player: 'Tim', teams: [team('Arizona', 10), team('Buffalo', 65), team('Kansas City', 60), team('Miami', 15), team('Minnesota', 40), team('Philadelphia', 60)] },
+        { player: 'Wes', teams: [team('Dallas', 50), team('Green Bay', 50), team('New England', 55), team('Pittsburgh', 40), team('San Francisco', 55)] }
+    ];
+
+    // Only finished games count toward points; live/upcoming games contribute
+    // nothing yet (docs/pool-rules.md: 1 pt/win, 0.5 pt/tie, regular season only
+    // for now, see the stakeFor comment above for postseason).
+    function teamPointsFromGames(games) {
+        const points = {};
+        games.forEach(g => {
+            if (g.state !== 'post') return;
+            const awayScore = Number(g.away.score), homeScore = Number(g.home.score);
+            if (awayScore === homeScore) {
+                points[g.away.abbr] = (points[g.away.abbr] || 0) + 0.5;
+                points[g.home.abbr] = (points[g.home.abbr] || 0) + 0.5;
+            } else {
+                const winner = awayScore > homeScore ? g.away.abbr : g.home.abbr;
+                points[winner] = (points[winner] || 0) + 1;
+            }
+        });
+        return points;
+    }
+
+    function mergePoints(...maps) {
+        const out = {};
+        maps.forEach(m => Object.entries(m).forEach(([abbr, pts]) => {
+            out[abbr] = (out[abbr] || 0) + pts;
+        }));
+        return out;
+    }
+
+    function formatPoints(n) {
+        return (Math.round(n * 2) / 2).toString().replace(/^0\./, '.');
+    }
+
+    function pickRow(t) {
+        const row = document.createElement('div');
+        row.className = 'lb-pick';
+        row.appendChild(badgeEl(t.abbr, t.name));
+        const name = document.createElement('span');
+        name.textContent = TEAM_FULL_NAME[t.abbr] || t.name;
+        row.appendChild(name);
+        return row;
+    }
+
+    function leaderboardRow(entry) {
+        const row = document.createElement('div');
+        row.className = 'lb-row' + (SMALL_GROUP.has(entry.player) ? ' small-group' : '');
+        row.setAttribute('role', 'button');
+        row.setAttribute('tabindex', '0');
+        row.setAttribute('aria-expanded', 'false');
+
+        const main = document.createElement('div');
+        main.className = 'lb-row-main';
+
+        const rank = document.createElement('span');
+        rank.className = 'lb-rank';
+        rank.textContent = entry.rank;
+        main.appendChild(rank);
+
+        const name = document.createElement('span');
+        name.className = 'lb-name';
+        name.textContent = entry.player;
+        main.appendChild(name);
+
+        if (SMALL_GROUP.has(entry.player)) {
+            const star = document.createElement('span');
+            star.className = 'lb-star';
+            star.textContent = '★';
+            star.title = 'Small Group';
+            main.appendChild(star);
+        }
+
+        const points = document.createElement('span');
+        points.className = 'lb-points';
+        points.textContent = formatPoints(entry.points);
+        main.appendChild(points);
+
+        const chevron = document.createElement('span');
+        chevron.className = 'lb-chevron';
+        chevron.textContent = '▾';
+        main.appendChild(chevron);
+
+        row.appendChild(main);
+
+        const picks = document.createElement('div');
+        picks.className = 'lb-picks';
+        entry.teams.forEach(t => picks.appendChild(pickRow(t)));
+        row.appendChild(picks);
+
+        function toggle() {
+            const expanded = row.classList.toggle('expanded');
+            row.setAttribute('aria-expanded', String(expanded));
+            chevron.textContent = expanded ? '▴' : '▾';
+        }
+        row.addEventListener('click', toggle);
+        row.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+        });
+
+        return row;
+    }
+
+    function renderLeaderboard(teamPoints) {
+        const lbEl = document.getElementById('leaderboard');
+        const entries = POOL.map(p => ({
+            player: p.player,
+            teams: p.teams,
+            points: p.teams.reduce((sum, t) => sum + (teamPoints[t.abbr] || 0), 0)
+        }));
+        entries.sort((a, b) => b.points - a.points || a.player.localeCompare(b.player));
+
+        let rank = 0, prevPoints = null;
+        entries.forEach((entry, i) => {
+            if (entry.points !== prevPoints) { rank = i + 1; prevPoints = entry.points; }
+            entry.rank = rank;
+        });
+
+        const expandedPlayers = new Set(
+            Array.from(lbEl.querySelectorAll('.lb-row.expanded .lb-name')).map(el => el.textContent)
+        );
+
+        lbEl.innerHTML = '';
+        entries.forEach(entry => {
+            const row = leaderboardRow(entry);
+            if (expandedPlayers.has(entry.player)) {
+                row.classList.add('expanded');
+                row.setAttribute('aria-expanded', 'true');
+            }
+            lbEl.appendChild(row);
+        });
+    }
+
     function badgeEl(abbr, teamName) {
         const color = BORDER_COLORS[abbr] || '#16130d';
         if (LOGOS[abbr]) {
@@ -181,52 +445,76 @@
         return day + ' · ' + time;
     }
 
+    function scorebugTeamRow(teamInfo, leading) {
+        const r = document.createElement('div');
+        r.className = 'scorebug-team' + (leading ? ' leading' : '');
+        r.appendChild(badgeEl(teamInfo.abbr, teamInfo.name));
+        const name = document.createElement('span');
+        name.className = 'scorebug-name';
+        name.textContent = teamInfo.name;
+        r.appendChild(name);
+        const score = document.createElement('span');
+        score.className = 'scorebug-score';
+        score.textContent = teamInfo.score;
+        r.appendChild(score);
+        return r;
+    }
+
     function gameRow(game, stake) {
         const row = document.createElement('div');
         row.className = 'game-row';
 
-        const meta = document.createElement('div');
-        meta.className = 'game-meta';
-        const metaLeft = document.createElement('span');
-        metaLeft.textContent = game.state === 'pre' ? formatKickoff(game.date) : game.statusDetail;
-        const metaRight = document.createElement('span');
-        metaRight.className = 'game-stake';
-        metaRight.textContent = stake;
-        meta.appendChild(metaLeft);
-        meta.appendChild(metaRight);
-        row.appendChild(meta);
+        if (game.state === 'pre') {
+            const meta = document.createElement('div');
+            meta.className = 'game-meta';
+            const metaLeft = document.createElement('span');
+            metaLeft.textContent = formatKickoff(game.date);
+            const metaRight = document.createElement('span');
+            metaRight.className = 'game-stake';
+            metaRight.textContent = stake;
+            meta.appendChild(metaLeft);
+            meta.appendChild(metaRight);
+            row.appendChild(meta);
 
-        const teamsEl = document.createElement('div');
-        teamsEl.className = 'game-teams';
-        const started = game.state !== 'pre';
+            const teamsEl = document.createElement('div');
+            teamsEl.className = 'game-teams';
+            const awayName = document.createElement('span');
+            awayName.textContent = game.away.name;
+            const at = document.createElement('span');
+            at.className = 'game-at';
+            at.textContent = 'at';
+            const homeName = document.createElement('span');
+            homeName.textContent = game.home.name;
 
-        const awayName = document.createElement('span');
-        awayName.textContent = game.away.name;
-        const at = document.createElement('span');
-        at.className = 'game-at';
-        at.textContent = 'at';
-        const homeName = document.createElement('span');
-        homeName.textContent = game.home.name;
+            teamsEl.appendChild(badgeEl(game.away.abbr, game.away.name));
+            teamsEl.appendChild(awayName);
+            teamsEl.appendChild(at);
+            teamsEl.appendChild(homeName);
+            teamsEl.appendChild(badgeEl(game.home.abbr, game.home.name));
 
-        teamsEl.appendChild(badgeEl(game.away.abbr, game.away.name));
-        teamsEl.appendChild(awayName);
-        if (started) {
-            const awayScore = document.createElement('span');
-            awayScore.className = 'game-score';
-            awayScore.textContent = game.away.score;
-            teamsEl.appendChild(awayScore);
+            row.appendChild(teamsEl);
+            return row;
         }
-        teamsEl.appendChild(at);
-        if (started) {
-            const homeScore = document.createElement('span');
-            homeScore.className = 'game-score';
-            homeScore.textContent = game.home.score;
-            teamsEl.appendChild(homeScore);
-        }
-        teamsEl.appendChild(homeName);
-        teamsEl.appendChild(badgeEl(game.home.abbr, game.home.name));
 
-        row.appendChild(teamsEl);
+        const bug = document.createElement('div');
+        bug.className = 'scorebug';
+
+        const status = document.createElement('div');
+        status.className = 'scorebug-status';
+        const statusLeft = document.createElement('span');
+        statusLeft.textContent = game.statusDetail;
+        const statusRight = document.createElement('span');
+        statusRight.className = 'game-stake';
+        statusRight.textContent = stake;
+        status.appendChild(statusLeft);
+        status.appendChild(statusRight);
+        bug.appendChild(status);
+
+        const awayScore = Number(game.away.score), homeScore = Number(game.home.score);
+        bug.appendChild(scorebugTeamRow(game.away, awayScore >= homeScore));
+        bug.appendChild(scorebugTeamRow(game.home, homeScore >= awayScore));
+
+        row.appendChild(bug);
         return row;
     }
 
@@ -255,49 +543,103 @@
         });
     }
 
-    async function initGamesThisWeek() {
+    function showGamesError() {
         const gamesEl = document.getElementById('games');
-        const weekTagEl = document.getElementById('week-tag');
+        gamesEl.innerHTML = '';
+        const empty = document.createElement('p');
+        empty.className = 'games-empty';
+        empty.textContent = 'Games unavailable right now.';
+        gamesEl.appendChild(empty);
+    }
 
-        function showGamesError() {
-            gamesEl.innerHTML = '';
+    function showLeaderboardError() {
+        const lbEl = document.getElementById('leaderboard');
+        lbEl.innerHTML = '';
+        const empty = document.createElement('p');
+        empty.className = 'lb-empty';
+        empty.textContent = 'Leaderboard unavailable right now.';
+        lbEl.appendChild(empty);
+    }
+
+    function renderGames(games, stake) {
+        const gamesEl = document.getElementById('games');
+        gamesEl.innerHTML = '';
+        if (!games.length) {
             const empty = document.createElement('p');
             empty.className = 'games-empty';
-            empty.textContent = 'Games unavailable right now.';
+            empty.textContent = 'No games scheduled.';
             gamesEl.appendChild(empty);
+            return;
         }
+        games.forEach(game => gamesEl.appendChild(gameRow(game, stake)));
+    }
+
+    // Live games get polled every 30s so scores/status update without a reload;
+    // polling stops once nothing is left in progress.
+    const POLL_INTERVAL_MS = 30000;
+
+    async function initGamedayView() {
+        const weekTagEl = document.getElementById('week-tag');
 
         let week, seasonType;
         try {
             ({ week, seasonType } = await fetchCurrentWeekInfo());
-            weekTagEl.textContent = seasonType === 'Regular Season' ? 'Week ' + week : seasonType;
+            weekTagEl.textContent = seasonType === 'Regular Season' ? 'Week ' + week + ' · ' + seasonType : seasonType;
         } catch (err) {
             console.error('Failed to load current week info:', err);
             weekTagEl.textContent = '';
             showGamesError();
+            showLeaderboardError();
             return;
         }
 
-        try {
-            const games = await fetchWeekGames(week);
-            const stake = stakeFor(seasonType);
-
-            gamesEl.innerHTML = '';
-            if (!games.length) {
-                const empty = document.createElement('p');
-                empty.className = 'games-empty';
-                empty.textContent = 'No games scheduled.';
-                gamesEl.appendChild(empty);
-                return;
+        let basePoints = {};
+        if (seasonType === 'Regular Season' && week > 1) {
+            try {
+                const priorWeeks = await Promise.all(
+                    Array.from({ length: week - 1 }, (_, i) => fetchWeekGames(i + 1))
+                );
+                basePoints = teamPointsFromGames(priorWeeks.flat());
+            } catch (err) {
+                console.error('Failed to load prior weeks\' results:', err);
             }
-            games.forEach(game => gamesEl.appendChild(gameRow(game, stake)));
+        }
+
+        const stake = stakeFor(seasonType);
+
+        async function refresh() {
+            const games = await fetchWeekGames(week);
+            renderGames(games, stake);
+            renderLeaderboard(mergePoints(basePoints, teamPointsFromGames(games)));
+            return games;
+        }
+
+        let games;
+        try {
+            games = await refresh();
         } catch (err) {
             console.error('Failed to load this week\'s games:', err);
             showGamesError();
+            renderLeaderboard(basePoints);
+            return;
         }
+
+        function scheduleNextPoll() {
+            const stillLive = games.some(g => g.state === 'in');
+            if (!stillLive) return;
+            setTimeout(async () => {
+                try {
+                    games = await refresh();
+                } catch (err) {
+                    console.error('Failed to refresh live games:', err);
+                }
+                scheduleNextPoll();
+            }, POLL_INTERVAL_MS);
+        }
+        scheduleNextPoll();
     }
 
-    initGamesThisWeek();
+    initGamedayView();
 </script>
 </body>
 </html>
