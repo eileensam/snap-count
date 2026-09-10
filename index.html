@@ -487,7 +487,7 @@
 
         const trajectories = playerTrajectories(weeksGamesArr);
         const W = 640, H = 260;
-        const padLeft = 8, padRight = 92, padTop = 14, padBottom = 22;
+        const padLeft = 8, padRight = 14, padTop = 14, padBottom = 22;
         const innerW = W - padLeft - padRight;
         const innerH = H - padTop - padBottom;
         const maxY = Math.max(1, ...trajectories.flatMap(t => t.values)) * 1.15;
@@ -509,20 +509,24 @@
             return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + (isSG ? 2 : 1) + '" opacity="' + (isSG ? 1 : 0.3) + '" stroke-linejoin="round" stroke-linecap="round"/>';
         }
 
-        let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Cumulative points by week, tap a Small Group point for detail">';
+        let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Cumulative points by week, tap any point for detail">';
         svg += '<line x1="' + padLeft + '" y1="' + y(0) + '" x2="' + (W - padRight) + '" y2="' + y(0) + '" stroke="#ddd0ab" stroke-width="1"/>';
         trajectories.filter(t => !t.smallGroup).forEach(t => { svg += lineFor(t); });
         const sgTrajectories = trajectories.filter(t => t.smallGroup);
         sgTrajectories.forEach(t => { svg += lineFor(t); });
 
-        // Small Group gets a dot at every week (not just a fixed end label),
-        // each with an invisible larger hit-target for hover/tap detail.
-        sgTrajectories.forEach(t => {
-            const color = SG_COLORS[t.player];
+        // Small Group gets a persistent dot at every week (not just a fixed
+        // end label); everyone else stays an unlabeled faint line, but every
+        // point on every line (Full League included) gets an invisible
+        // hit-target so tap/hover detail works for anyone, not just SG.
+        trajectories.forEach(t => {
+            const color = t.smallGroup ? SG_COLORS[t.player] : '#16130d';
             t.values.forEach((v, i) => {
                 const cx = x(i), cy = y(v);
-                svg += '<circle cx="' + cx + '" cy="' + cy + '" r="2.5" fill="' + color + '"/>';
-                svg += '<circle class="graph-dot-hit" tabindex="0" data-player="' + t.player + '" data-week="' + (i + 1) +
+                if (t.smallGroup) {
+                    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="2.5" fill="' + color + '"/>';
+                }
+                svg += '<circle class="graph-dot-hit" data-player="' + t.player + '" data-week="' + (i + 1) +
                     '" data-value="' + formatPoints(v) + '" data-x="' + cx + '" data-y="' + cy + '" data-color="' + color +
                     '" cx="' + cx + '" cy="' + cy + '" r="6" fill="transparent"/>';
             });
@@ -573,8 +577,6 @@
         graphEl.querySelectorAll('.graph-dot-hit').forEach(dot => {
             dot.addEventListener('pointerenter', () => { if (!pinnedDot) show(dot); });
             dot.addEventListener('pointerleave', () => { if (!pinnedDot) hide(); });
-            dot.addEventListener('focus', () => show(dot));
-            dot.addEventListener('blur', () => { if (pinnedDot !== dot) hide(); });
             dot.addEventListener('click', e => {
                 e.stopPropagation();
                 if (pinnedDot === dot) { hide(); return; }
