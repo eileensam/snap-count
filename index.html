@@ -428,8 +428,8 @@
         entries.sort((a, b) => b.points - a.points || a.player.localeCompare(b.player));
 
         let rank = 0, prevPoints = null;
-        entries.forEach((entry, i) => {
-            if (entry.points !== prevPoints) { rank = i + 1; prevPoints = entry.points; }
+        entries.forEach(entry => {
+            if (entry.points !== prevPoints) { rank += 1; prevPoints = entry.points; }
             entry.rank = rank;
         });
 
