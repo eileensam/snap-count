@@ -101,9 +101,14 @@
             font-size: 0.9rem;
             color: var(--ink-soft);
             flex-shrink: 0;
+            padding: 0.2rem 0;
         }
-        .pop-row.has-owners { cursor: pointer; }
-        .pop-row.has-owners .pop-count { text-decoration: underline; text-decoration-color: #ddd0ab; text-underline-offset: 2px; }
+        .pop-count.linked {
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-color: #ddd0ab;
+            text-underline-offset: 2px;
+        }
         .pop-bar-track {
             height: 10px;
             border-radius: 5px;
@@ -333,20 +338,20 @@
         pinnedTrigger = null;
     }
 
-    function wireOwnerTooltip(trigger, anchorEl, owners, teamName) {
-        trigger.addEventListener('pointerenter', () => { if (!pinnedTrigger) showOwnerTooltip(anchorEl, owners, teamName); });
+    function wireOwnerTooltip(trigger, owners, teamName) {
+        trigger.addEventListener('pointerenter', () => { if (!pinnedTrigger) showOwnerTooltip(trigger, owners, teamName); });
         trigger.addEventListener('pointerleave', () => { if (!pinnedTrigger) hideOwnerTooltip(); });
         trigger.addEventListener('click', e => {
             e.stopPropagation();
             if (pinnedTrigger === trigger) { hideOwnerTooltip(); return; }
             pinnedTrigger = trigger;
-            showOwnerTooltip(anchorEl, owners, teamName);
+            showOwnerTooltip(trigger, owners, teamName);
         });
     }
 
     function popRow(abbr, owners, maxCount, extra) {
         const row = document.createElement('div');
-        row.className = 'pop-row' + (owners.length ? ' has-owners' : '') + (extra ? ' pop-row-extra' : '');
+        row.className = 'pop-row' + (extra ? ' pop-row-extra' : '');
 
         const top = document.createElement('div');
         top.className = 'pop-row-top';
@@ -360,7 +365,7 @@
         price.textContent = '$' + TEAM_PRICE[abbr];
         top.appendChild(price);
         const count = document.createElement('span');
-        count.className = 'pop-count';
+        count.className = 'pop-count' + (owners.length ? ' linked' : '');
         count.textContent = owners.length + (owners.length === 1 ? ' owner' : ' owners');
         top.appendChild(count);
         row.appendChild(top);
@@ -374,7 +379,9 @@
         track.appendChild(fill);
         row.appendChild(track);
 
-        if (owners.length) wireOwnerTooltip(row, count, owners, TEAM_FULL_NAME[abbr]);
+        // Bound to the count text specifically, not the whole row, so
+        // scrolling/tapping elsewhere on a row doesn't pop the tooltip.
+        if (owners.length) wireOwnerTooltip(count, owners, TEAM_FULL_NAME[abbr]);
 
         return row;
     }
