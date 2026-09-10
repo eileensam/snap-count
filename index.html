@@ -494,7 +494,7 @@
         }));
         const numPoints = numWeeks + 1;
         const W = 640, H = 260;
-        const padLeft = 8, padRight = 14, padTop = 14, padBottom = 22;
+        const padLeft = 24, padRight = 14, padTop = 14, padBottom = 22;
         const innerW = W - padLeft - padRight;
         const innerH = H - padTop - padBottom;
         const maxY = Math.max(1, ...trajectories.flatMap(t => t.values)) * 1.15;
@@ -513,31 +513,60 @@
             return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + (isSG ? 2 : 1) + '" opacity="' + (isSG ? 1 : 0.3) + '" stroke-linejoin="round" stroke-linecap="round"/>';
         }
 
+        // Round point-value gridline step (0.5/1/2/5/10/...) landing on
+        // roughly 4 ticks, so the axis reads in sensible increments rather
+        // than whatever the raw data range happens to be.
+        function niceStep(maxVal, targetTicks) {
+            const rough = maxVal / targetTicks;
+            const steps = [0.5, 1, 2, 5, 10, 20, 25, 50, 100];
+            for (const s of steps) { if (rough <= s) return s; }
+            return steps[steps.length - 1];
+        }
+        const step = niceStep(maxY, 4);
+        const ticks = [];
+        for (let i = 0; i * step <= maxY; i++) ticks.push(i * step);
+
         let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Cumulative points by week, tap any point for detail">';
-        svg += '<line x1="' + padLeft + '" y1="' + y(0) + '" x2="' + (W - padRight) + '" y2="' + y(0) + '" stroke="#ddd0ab" stroke-width="1"/>';
+        ticks.forEach(v => {
+            const ty = y(v);
+            svg += '<line x1="' + padLeft + '" y1="' + ty + '" x2="' + (W - padRight) + '" y2="' + ty + '" stroke="#ddd0ab" stroke-width="1"/>';
+            svg += '<text x="' + (padLeft - 6) + '" y="' + (ty + 3) + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" fill="#6b6350" text-anchor="end">' + formatPoints(v) + '</text>';
+        });
         trajectories.filter(t => !t.smallGroup).forEach(t => { svg += lineFor(t); });
         const sgTrajectories = trajectories.filter(t => t.smallGroup);
         sgTrajectories.forEach(t => { svg += lineFor(t); });
 
-        // Small Group gets a persistent dot at every real week (not just a
-        // fixed end label); everyone else stays an unlabeled faint line, but
-        // every point on every real week (Full League included) gets an
-        // invisible hit-target so tap/hover detail works for anyone, not
-        // just SG. Week 0 is skipped here: everyone is tied at zero there,
-        // so a dot/tooltip on it has nothing to show.
-        trajectories.forEach(t => {
-            const color = t.smallGroup ? SG_COLORS[t.player] : '#16130d';
-            t.values.forEach((v, i) => {
-                if (i === 0) return;
+        // Group players tied at the same value in the same week onto one
+        // dot + one hit-target, instead of one hit-target per player stacked
+        // on top of each other (only the topmost used to respond to
+        // hover/tap, so ties silently showed just one name). The tooltip
+        // for a group lists everyone there. Small Group presence gets the
+        // larger, fully-opaque dot; Full League-only ties get a smaller,
+        // faint one. Week 0 is skipped: everyone is tied at zero there, so
+        // a dot/tooltip on it has nothing to show.
+        for (let i = 1; i <= numWeeks; i++) {
+            const groups = new Map();
+            trajectories.forEach(t => {
+                const v = t.values[i];
+                if (!groups.has(v)) groups.set(v, []);
+                groups.get(v).push(t);
+            });
+            groups.forEach((members, v) => {
                 const cx = x(i), cy = y(v);
-                if (t.smallGroup) {
-                    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="2.5" fill="' + color + '"/>';
-                }
-                svg += '<circle class="graph-dot-hit" data-player="' + t.player + '" data-week="' + i +
-                    '" data-value="' + formatPoints(v) + '" data-x="' + cx + '" data-y="' + cy + '" data-color="' + color +
+                const sgMembers = members.filter(m => m.smallGroup);
+                const dotColor = sgMembers.length ? SG_COLORS[sgMembers[0].player] : '#6b6350';
+                const dotR = sgMembers.length ? 2.5 : 1.5;
+                const dotOpacity = sgMembers.length ? 1 : 0.5;
+                svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + dotR + '" fill="' + dotColor + '" opacity="' + dotOpacity + '"/>';
+
+                const names = members.map(m => m.player).join('|');
+                const colors = members.map(m => m.smallGroup ? SG_COLORS[m.player] : '#16130d').join('|');
+                svg += '<circle class="graph-dot-hit" data-week="' + i + '" data-value="' + formatPoints(v) +
+                    '" data-players="' + names + '" data-colors="' + colors +
+                    '" data-x="' + cx + '" data-y="' + cy +
                     '" cx="' + cx + '" cy="' + cy + '" r="6" fill="transparent"/>';
             });
-        });
+        }
 
         for (let w = 0; w <= numWeeks; w++) {
             svg += '<text x="' + x(w) + '" y="' + (H - 6) + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" fill="#6b6350" text-anchor="middle">' + w + '</text>';
@@ -545,7 +574,7 @@
 
         svg += '<g id="graph-tooltip" visibility="hidden">' +
             '<rect id="graph-tooltip-bg" fill="var(--paper-raised)" stroke="var(--ink)" stroke-width="1" rx="3"></rect>' +
-            '<text id="graph-tooltip-text" font-family="Oswald, Arial Narrow, sans-serif" font-size="11" font-weight="600"></text>' +
+            '<g id="graph-tooltip-lines"></g>' +
             '</g>';
         svg += '</svg>';
         graphEl.innerHTML = svg;
@@ -555,17 +584,39 @@
     function wireGraphTooltip(graphEl, W, H) {
         const tooltip = graphEl.querySelector('#graph-tooltip');
         const tooltipBg = graphEl.querySelector('#graph-tooltip-bg');
-        const tooltipText = graphEl.querySelector('#graph-tooltip-text');
+        const tooltipLines = graphEl.querySelector('#graph-tooltip-lines');
+        const SVG_NS = 'http://www.w3.org/2000/svg';
+        const lineHeight = 13;
         let pinnedDot = null;
+
+        function addLine(text, color, y) {
+            const t = document.createElementNS(SVG_NS, 'text');
+            t.setAttribute('font-family', 'Oswald, Arial Narrow, sans-serif');
+            t.setAttribute('font-size', '11');
+            t.setAttribute('font-weight', '600');
+            t.setAttribute('fill', color);
+            t.setAttribute('x', 0);
+            t.setAttribute('y', y);
+            t.textContent = text;
+            tooltipLines.appendChild(t);
+        }
 
         function show(dot) {
             const px = Number(dot.dataset.x), py = Number(dot.dataset.y);
-            const label = dot.dataset.player + ' · ' + dot.dataset.value + (dot.dataset.value === '1' ? ' pt' : ' pts');
-            tooltipText.textContent = label;
-            tooltipText.setAttribute('fill', dot.dataset.color);
-            tooltipText.setAttribute('x', 0);
-            tooltipText.setAttribute('y', 0);
-            const bbox = tooltipText.getBBox();
+            const players = dot.dataset.players.split('|');
+            const colors = dot.dataset.colors.split('|');
+            const value = dot.dataset.value;
+            const unit = value === '1' ? ' pt' : ' pts';
+
+            tooltipLines.innerHTML = '';
+            if (players.length === 1) {
+                addLine(players[0] + ' · ' + value + unit, colors[0], 0);
+            } else {
+                addLine(value + unit, '#6b6350', 0);
+                players.forEach((name, i) => addLine(name, colors[i], (i + 1) * lineHeight));
+            }
+
+            const bbox = tooltipLines.getBBox();
             const padX = 6, padY = 4, gap = 9;
             const boxW = bbox.width + padX * 2, boxH = bbox.height + padY * 2;
             const onLeft = px > W / 2;
@@ -575,8 +626,7 @@
             tooltipBg.setAttribute('y', boxY);
             tooltipBg.setAttribute('width', boxW);
             tooltipBg.setAttribute('height', boxH);
-            tooltipText.setAttribute('x', boxX + padX);
-            tooltipText.setAttribute('y', boxY + boxH - padY - 2);
+            tooltipLines.setAttribute('transform', 'translate(' + (boxX + padX - bbox.x) + ',' + (boxY + padY - bbox.y) + ')');
             tooltip.setAttribute('visibility', 'visible');
         }
         function hide() { tooltip.setAttribute('visibility', 'hidden'); pinnedDot = null; }
