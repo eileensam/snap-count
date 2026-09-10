@@ -553,7 +553,7 @@
 
         function show(dot) {
             const px = Number(dot.dataset.x), py = Number(dot.dataset.y);
-            const label = dot.dataset.player + ' · Wk ' + dot.dataset.week + ' · ' + dot.dataset.value + (dot.dataset.value === '1' ? ' pt' : ' pts');
+            const label = dot.dataset.player + ' · ' + dot.dataset.value + (dot.dataset.value === '1' ? ' pt' : ' pts');
             tooltipText.textContent = label;
             tooltipText.setAttribute('fill', dot.dataset.color);
             tooltipText.setAttribute('x', 0);
