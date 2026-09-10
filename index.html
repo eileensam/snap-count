@@ -46,19 +46,28 @@
         .page-nav a { color: var(--ink-soft); }
         .page-nav .current { color: var(--ink); font-weight: 700; }
 
-        .section-heading {
+        /* tabs */
+        .tabs { display: flex; gap: 1.6rem; border-bottom: 1.5px solid var(--ink); }
+        .tab {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1.5px;
+            padding: 0 0 0.5rem;
             font-family: 'Oswald', 'Arial Narrow', sans-serif;
             font-weight: 600;
             font-size: 1.05rem;
             letter-spacing: 0.02em;
             text-transform: uppercase;
-            color: var(--ink);
-            margin: 2.2rem 0 0.5rem;
+            color: var(--ink-soft);
+            cursor: pointer;
         }
-        .section-heading:first-of-type { margin-top: 0; }
+        .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+        .tab-panel { margin-top: 1.2rem; margin-bottom: 2rem; }
+        .tab-panel[hidden] { display: none; }
 
         /* games this week */
-        .games { border-top: 1.5px solid var(--ink); margin: 0 0 2rem; }
+        .games { margin: 0; }
         .game-row { padding: 0.6rem 0.1rem; border-bottom: 1px solid #ddd0ab; }
         .game-meta {
             display: flex;
@@ -159,7 +168,7 @@
         }
 
         /* leaderboard */
-        .leaderboard { border-top: 1.5px solid var(--ink); margin: 0 0 2rem; }
+        .leaderboard { margin: 0; }
         .lb-row {
             display: block;
             width: 100%;
@@ -217,14 +226,21 @@
         <p class="page-nav"><span class="current">Home</span> &middot; <a href="rules.html">Rules</a></p>
     </div>
 
-    <div class="section-heading">Leaderboard</div>
-    <div class="leaderboard" id="leaderboard">
-        <p class="lb-empty">Loading&hellip;</p>
+    <div class="tabs" role="tablist">
+        <button class="tab active" id="tab-leaderboard" role="tab" aria-selected="true" aria-controls="panel-leaderboard">Leaderboard</button>
+        <button class="tab" id="tab-games" role="tab" aria-selected="false" aria-controls="panel-games">Games</button>
     </div>
 
-    <div class="section-heading">Games this week</div>
-    <div class="games" id="games">
-        <p class="games-empty">Loading&hellip;</p>
+    <div class="tab-panel" id="panel-leaderboard" role="tabpanel" aria-labelledby="tab-leaderboard">
+        <div class="leaderboard" id="leaderboard">
+            <p class="lb-empty">Loading&hellip;</p>
+        </div>
+    </div>
+
+    <div class="tab-panel" id="panel-games" role="tabpanel" aria-labelledby="tab-games" hidden>
+        <div class="games" id="games">
+            <p class="games-empty">Loading&hellip;</p>
+        </div>
     </div>
 </div>
 
@@ -653,6 +669,20 @@
         scheduleNextPoll();
     }
 
+    function initTabs() {
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.toggle('active', t === tab);
+                    t.setAttribute('aria-selected', String(t === tab));
+                    document.getElementById(t.getAttribute('aria-controls')).hidden = t !== tab;
+                });
+            });
+        });
+    }
+
+    initTabs();
     initGamedayView();
 </script>
 </body>
