@@ -494,7 +494,7 @@
         }));
         const numPoints = numWeeks + 1;
         const W = 640, H = 260;
-        const padLeft = 24, padRight = 14, padTop = 14, padBottom = 22;
+        const padLeft = 32, padRight = 14, padTop = 14, padBottom = 34;
         const innerW = W - padLeft - padRight;
         const innerH = H - padTop - padBottom;
         const maxY = Math.max(1, ...trajectories.flatMap(t => t.values)) * 1.15;
@@ -532,6 +532,10 @@
             svg += '<line x1="' + padLeft + '" y1="' + ty + '" x2="' + (W - padRight) + '" y2="' + ty + '" stroke="#ddd0ab" stroke-width="1"/>';
             svg += '<text x="' + (padLeft - 6) + '" y="' + (ty + 3) + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" fill="#6b6350" text-anchor="end">' + formatPoints(v) + '</text>';
         });
+        {
+            const yTitleX = 9, yTitleY = padTop + innerH / 2;
+            svg += '<text x="' + yTitleX + '" y="' + yTitleY + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" font-weight="600" fill="#6b6350" text-anchor="middle" transform="rotate(-90 ' + yTitleX + ' ' + yTitleY + ')">Points</text>';
+        }
         trajectories.filter(t => !t.smallGroup).forEach(t => { svg += lineFor(t); });
         const sgTrajectories = trajectories.filter(t => t.smallGroup);
         sgTrajectories.forEach(t => { svg += lineFor(t); });
@@ -576,8 +580,9 @@
         }
 
         for (let w = 0; w <= numWeeks; w++) {
-            svg += '<text x="' + x(w) + '" y="' + (H - 6) + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" fill="#6b6350" text-anchor="middle">' + w + '</text>';
+            svg += '<text x="' + x(w) + '" y="' + (H - padBottom + 10) + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" fill="#6b6350" text-anchor="middle">' + w + '</text>';
         }
+        svg += '<text x="' + (padLeft + innerW / 2) + '" y="' + (H - 6) + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" font-weight="600" fill="#6b6350" text-anchor="middle">Week</text>';
 
         svg += '<g id="graph-tooltip" visibility="hidden">' +
             '<rect id="graph-tooltip-bg" fill="var(--paper-raised)" stroke="var(--ink)" stroke-width="1" rx="3"></rect>' +
