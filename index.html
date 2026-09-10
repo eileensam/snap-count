@@ -65,6 +65,8 @@
         .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
         .tab-panel { margin-top: 1.2rem; margin-bottom: 2rem; }
         .tab-panel[hidden] { display: none; }
+        .graph { margin-bottom: 1.4rem; }
+        .graph svg { display: block; width: 100%; height: auto; }
 
         /* games this week */
         .games { margin: 0; }
@@ -232,6 +234,7 @@
     </div>
 
     <div class="tab-panel" id="panel-leaderboard" role="tabpanel" aria-labelledby="tab-leaderboard">
+        <div class="graph" id="graph"></div>
         <div class="leaderboard" id="leaderboard">
             <p class="lb-empty">Loading&hellip;</p>
         </div>
@@ -383,6 +386,7 @@
             star.className = 'lb-star';
             star.textContent = '★';
             star.title = 'Small Group';
+            star.style.color = SG_COLORS[entry.player];
             main.appendChild(star);
         }
 
@@ -444,6 +448,116 @@
             }
             lbEl.appendChild(row);
         });
+    }
+
+    // One color per Small Group player, drawn from the design system's five
+    // content colors (docs/design/system.md); everyone else is an unlabeled
+    // faint ink-soft line for context, not read individually.
+    const SG_COLORS = {
+        'Chris R.': '#1e3a5c',
+        'Eileen': '#a8791a',
+        'Emma': '#a5382a',
+        'Erika': '#2c5a3b',
+        'Sean R.': '#5a3a72'
+    };
+
+    function cumulativeTeamPointsByWeek(weeksGamesArr) {
+        const cum = [];
+        let running = {};
+        weeksGamesArr.forEach(gamesForWeek => {
+            running = mergePoints(running, teamPointsFromGames(gamesForWeek));
+            cum.push(running);
+        });
+        return cum;
+    }
+
+    function playerTrajectories(weeksGamesArr) {
+        const cumTeamPointsByWeek = cumulativeTeamPointsByWeek(weeksGamesArr);
+        return POOL.map(p => ({
+            player: p.player,
+            smallGroup: SMALL_GROUP.has(p.player),
+            values: cumTeamPointsByWeek.map(teamPoints =>
+                p.teams.reduce((sum, t) => sum + (teamPoints[t.abbr] || 0), 0)
+            )
+        }));
+    }
+
+    function renderGraph(weeksGamesArr) {
+        const graphEl = document.getElementById('graph');
+        const numWeeks = weeksGamesArr.length;
+        if (numWeeks === 0) { graphEl.innerHTML = ''; return; }
+
+        const trajectories = playerTrajectories(weeksGamesArr);
+        const W = 640, H = 260;
+        const padLeft = 8, padRight = 92, padTop = 14, padBottom = 22;
+        const innerW = W - padLeft - padRight;
+        const innerH = H - padTop - padBottom;
+        const maxY = Math.max(1, ...trajectories.flatMap(t => t.values)) * 1.15;
+
+        function x(weekIdx) {
+            return numWeeks > 1 ? padLeft + (weekIdx / (numWeeks - 1)) * innerW : padLeft;
+        }
+        function y(v) {
+            return padTop + innerH - (v / maxY) * innerH;
+        }
+
+        function lineFor(t) {
+            const isSG = t.smallGroup;
+            const color = isSG ? SG_COLORS[t.player] : '#6b6350';
+            if (numWeeks === 1) {
+                return '<circle cx="' + x(0) + '" cy="' + y(t.values[0]) + '" r="' + (isSG ? 3 : 1.5) + '" fill="' + color + '" opacity="' + (isSG ? 1 : 0.3) + '"/>';
+            }
+            const d = t.values.map((v, i) => (i === 0 ? 'M' : 'L') + x(i) + ',' + y(v)).join(' ');
+            return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + (isSG ? 2 : 1) + '" opacity="' + (isSG ? 1 : 0.3) + '" stroke-linejoin="round" stroke-linecap="round"/>';
+        }
+
+        // Labels stack on top of each other whenever players are tied (common,
+        // not just week 1), so lay them out sorted by dot position with a
+        // minimum gap instead of drawing each independently at its raw y.
+        function layoutLabels(sgTrajectories) {
+            const lastX = x(numWeeks - 1);
+            const items = sgTrajectories.map(t => ({
+                t, color: SG_COLORS[t.player], dotY: y(t.values[numWeeks - 1])
+            }));
+            items.sort((a, b) => a.dotY - b.dotY);
+            const minGap = 12;
+            let prevLabelY = -Infinity;
+            items.forEach(item => {
+                item.labelY = Math.max(item.dotY, prevLabelY + minGap);
+                prevLabelY = item.labelY;
+            });
+            // A tied cluster near the bottom (e.g. everyone at 0) stacks off
+            // the chart; slide the whole cluster up just enough to fit.
+            if (items.length) {
+                const maxLabelY = H - padBottom - 6;
+                const overflow = items[items.length - 1].labelY - maxLabelY;
+                if (overflow > 0) {
+                    const minAllowedShift = items[0].labelY - (padTop + 6);
+                    const shift = Math.min(overflow, Math.max(0, minAllowedShift));
+                    items.forEach(item => { item.labelY -= shift; });
+                }
+            }
+            return { lastX, items };
+        }
+
+        let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Cumulative points by week">';
+        svg += '<line x1="' + padLeft + '" y1="' + y(0) + '" x2="' + (W - padRight) + '" y2="' + y(0) + '" stroke="#ddd0ab" stroke-width="1"/>';
+        trajectories.filter(t => !t.smallGroup).forEach(t => { svg += lineFor(t); });
+        const sgTrajectories = trajectories.filter(t => t.smallGroup);
+        sgTrajectories.forEach(t => { svg += lineFor(t); });
+        const { lastX, items } = layoutLabels(sgTrajectories);
+        items.forEach(item => {
+            svg += '<circle cx="' + lastX + '" cy="' + item.dotY + '" r="2.5" fill="' + item.color + '"/>';
+            if (item.labelY !== item.dotY) {
+                svg += '<line x1="' + (lastX + 3) + '" y1="' + item.dotY + '" x2="' + (lastX + 6) + '" y2="' + item.labelY + '" stroke="' + item.color + '" stroke-width="0.75"/>';
+            }
+            svg += '<text x="' + (lastX + 7) + '" y="' + (item.labelY + 3.5) + '" font-family="Bodoni Moda, Georgia, serif" font-weight="700" font-size="11" fill="' + item.color + '">' + item.t.player + '</text>';
+        });
+        for (let w = 1; w <= numWeeks; w++) {
+            svg += '<text x="' + x(w - 1) + '" y="' + (H - 6) + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" fill="#6b6350" text-anchor="middle">' + w + '</text>';
+        }
+        svg += '</svg>';
+        graphEl.innerHTML = svg;
     }
 
     function badgeEl(abbr, teamName) {
@@ -623,17 +737,17 @@
             return;
         }
 
-        let basePoints = {};
+        let priorWeeksGames = [];
         if (seasonType === 'Regular Season' && week > 1) {
             try {
-                const priorWeeks = await Promise.all(
+                priorWeeksGames = await Promise.all(
                     Array.from({ length: week - 1 }, (_, i) => fetchWeekGames(i + 1))
                 );
-                basePoints = teamPointsFromGames(priorWeeks.flat());
             } catch (err) {
                 console.error('Failed to load prior weeks\' results:', err);
             }
         }
+        const basePoints = teamPointsFromGames(priorWeeksGames.flat());
 
         const stake = stakeFor(seasonType);
 
@@ -641,6 +755,7 @@
             const games = await fetchWeekGames(week);
             renderGames(games, stake);
             renderLeaderboard(mergePoints(basePoints, teamPointsFromGames(games)));
+            renderGraph(priorWeeksGames.concat([games]));
             return games;
         }
 
@@ -651,6 +766,7 @@
             console.error('Failed to load this week\'s games:', err);
             showGamesError();
             renderLeaderboard(basePoints);
+            renderGraph(priorWeeksGames);
             return;
         }
 
