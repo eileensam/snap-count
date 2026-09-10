@@ -153,6 +153,16 @@
             min-width: 1.7rem;
             text-align: right;
         }
+        .games-section-title {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin: 1.4rem 0 0.4rem;
+        }
+        .games-section-title:first-child { margin-top: 0; }
         .games-empty, .lb-empty {
             font-size: 0.85rem;
             color: var(--ink-soft);
@@ -682,6 +692,10 @@
         return day + ' · ' + time;
     }
 
+    function formatGameDay(iso) {
+        return new Date(iso).toLocaleDateString('en-US', { weekday: 'short' });
+    }
+
     function scorebugTeamRow(teamInfo, leading) {
         const r = document.createElement('div');
         r.className = 'scorebug-team' + (leading ? ' leading' : '');
@@ -744,7 +758,8 @@
             dot.className = 'scorebug-live-dot';
             statusLeft.appendChild(dot);
         }
-        statusLeft.appendChild(document.createTextNode(game.statusDetail));
+        const statusText = game.state === 'post' ? game.statusDetail + ' · ' + formatGameDay(game.date) : game.statusDetail;
+        statusLeft.appendChild(document.createTextNode(statusText));
         const statusRight = document.createElement('span');
         statusRight.className = 'game-stake';
         statusRight.textContent = stake;
@@ -803,6 +818,10 @@
         lbEl.appendChild(empty);
     }
 
+    // Live/Final/Upcoming, in that order, each sorted "most to least recent":
+    // live and upcoming by soonest kickoff first, final by most recently
+    // played first. A section (Live especially, empty most of the week) is
+    // skipped entirely rather than shown with nothing under it.
     function renderGames(games, stake) {
         const gamesEl = document.getElementById('games');
         gamesEl.innerHTML = '';
@@ -813,7 +832,22 @@
             gamesEl.appendChild(empty);
             return;
         }
-        games.forEach(game => gamesEl.appendChild(gameRow(game, stake)));
+
+        const byDate = (a, b) => a.date.localeCompare(b.date);
+        const sections = [
+            ['Live', games.filter(g => g.state === 'in').sort(byDate)],
+            ['Final', games.filter(g => g.state === 'post').sort((a, b) => byDate(b, a))],
+            ['Upcoming', games.filter(g => g.state === 'pre').sort(byDate)]
+        ];
+
+        sections.forEach(([title, group]) => {
+            if (!group.length) return;
+            const heading = document.createElement('div');
+            heading.className = 'games-section-title';
+            heading.textContent = title;
+            gamesEl.appendChild(heading);
+            group.forEach(game => gamesEl.appendChild(gameRow(game, stake)));
+        });
     }
 
     // Live games get polled every 30s so scores/status update without a reload;
