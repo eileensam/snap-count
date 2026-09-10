@@ -536,14 +536,21 @@
         const sgTrajectories = trajectories.filter(t => t.smallGroup);
         sgTrajectories.forEach(t => { svg += lineFor(t); });
 
+        // Week 0 is a trivial tie (everyone at 0), so it gets one shared
+        // anchor dot instead of looping every player into the same pixel.
+        {
+            const cx = x(0), cy = y(0);
+            svg += '<circle cx="' + cx + '" cy="' + cy + '" r="2.5" fill="#16130d"/>';
+            svg += '<circle class="graph-dot-hit" data-week="0" data-value="0" data-players="all" data-colors="#16130d" data-x="' + cx + '" data-y="' + cy + '" cx="' + cx + '" cy="' + cy + '" r="6" fill="transparent"/>';
+        }
+
         // Group players tied at the same value in the same week onto one
         // dot + one hit-target, instead of one hit-target per player stacked
         // on top of each other (only the topmost used to respond to
         // hover/tap, so ties silently showed just one name). The tooltip
         // for a group lists everyone there. Small Group presence gets the
         // larger, fully-opaque dot; Full League-only ties get a smaller,
-        // faint one. Week 0 is skipped: everyone is tied at zero there, so
-        // a dot/tooltip on it has nothing to show.
+        // faint one.
         for (let i = 1; i <= numWeeks; i++) {
             const groups = new Map();
             trajectories.forEach(t => {
@@ -609,7 +616,9 @@
             const unit = value === '1' ? ' pt' : ' pts';
 
             tooltipLines.innerHTML = '';
-            if (players.length === 1) {
+            if (dot.dataset.week === '0') {
+                addLine(value + unit + ' · all', colors[0], 0);
+            } else if (players.length === 1) {
                 addLine(players[0] + ' · ' + value + unit, colors[0], 0);
             } else {
                 addLine(value + unit, '#6b6350', 0);
