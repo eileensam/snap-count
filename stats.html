@@ -2,30 +2,425 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Snap-Count Stats</title>
-    <link href="css/style.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Snap-Count</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;0,700;1,700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper: #f6efd9;
+            --paper-raised: #fbf6e9;
+            --ink: #16130d;
+            --ink-soft: #6b6350;
+            --sg: #1e3a5c;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'Bodoni Moda', Georgia, serif;
+            margin: 0;
+            padding: 1.2rem;
+        }
+        .wrap { max-width: 640px; margin: 0 auto; }
+
+        .header { text-align: center; margin-bottom: 0.4rem; }
+        .wordmark {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 1.9rem;
+            margin: 0 0 0.3rem;
+        }
+        .week-tag {
+            font-style: italic;
+            font-size: 0.95rem;
+            color: var(--ink-soft);
+            margin: 0 0 0.4rem;
+        }
+        .page-nav { font-size: 0.78rem; margin: 0 0 1.6rem; }
+        .page-nav a { color: var(--ink-soft); }
+        .page-nav .current { color: var(--ink); font-weight: 700; text-decoration: none; }
+
+        .section-heading {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            font-size: 1.05rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin: 2.2rem 0 0.4rem;
+        }
+        .section-heading:first-of-type { margin-top: 0; }
+
+        .pop-chart { margin: 0; position: relative; }
+        .pop-row { padding: 0.4rem 0; }
+        .pop-row-top { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+        .team-badge {
+            width: 1.7rem;
+            height: 1.7rem;
+            border-radius: 50%;
+            border: 1.5px solid var(--team, var(--ink));
+            object-fit: cover;
+            background: var(--paper-raised);
+            flex-shrink: 0;
+        }
+        .team-badge-placeholder {
+            width: 1.7rem;
+            height: 1.7rem;
+            border-radius: 50%;
+            border: 1.5px solid var(--team, var(--ink));
+            background: var(--paper-raised);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-size: 0.5rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .pop-name { flex: 1; font-weight: 700; font-size: 0.9rem; }
+        .pop-price {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            font-size: 0.65rem;
+            letter-spacing: 0.03em;
+            color: var(--ink-soft);
+            background: #ece5d0;
+            border-radius: 3px;
+            padding: 0.1rem 0.35rem;
+            flex-shrink: 0;
+        }
+        .pop-count {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--ink-soft);
+            flex-shrink: 0;
+        }
+        .pop-row.has-owners { cursor: pointer; }
+        .pop-row.has-owners .pop-count { text-decoration: underline; text-decoration-color: #ddd0ab; text-underline-offset: 2px; }
+        .pop-bar-track {
+            height: 10px;
+            border-radius: 5px;
+            background: #ece5d0;
+            overflow: hidden;
+        }
+        .pop-bar-fill {
+            height: 100%;
+            border-radius: 5px 0 0 5px;
+            background: var(--ink);
+        }
+        .pop-bar-fill.full { border-radius: 5px; }
+
+        .pop-row-extra { display: none; }
+        .pop-chart.expanded .pop-row-extra { display: block; }
+
+        .see-all {
+            display: block;
+            width: 100%;
+            background: none;
+            border: none;
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            text-align: center;
+            padding: 0.9rem 0 0.3rem;
+            cursor: pointer;
+        }
+
+        .pop-tooltip {
+            position: fixed;
+            background: var(--paper-raised);
+            border: 1px solid var(--ink);
+            border-radius: 4px;
+            padding: 0.5rem 0.6rem;
+            max-width: 200px;
+            box-shadow: 2px 2px 0 rgba(22, 19, 13, 0.08);
+            z-index: 10;
+        }
+        .pop-tooltip[hidden] { display: none; }
+        .pop-tooltip-title {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            font-size: 0.72rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin: 0 0 0.4rem;
+        }
+        .pop-tooltip-owners { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; }
+        .pop-tooltip-owner { display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; white-space: nowrap; }
+        .pop-tooltip-owner-star { font-size: 0.72rem; }
+    </style>
 </head>
 <body>
+<div class="wrap">
+    <div class="header">
+        <div class="wordmark">Snap-Count</div>
+        <p class="week-tag" id="week-tag">&hellip;</p>
+        <p class="page-nav">
+            <a href="index.html">Leaderboard</a> &middot;
+            <a href="index.html?tab=games">Games</a> &middot;
+            <a href="rules.html">Rules</a> &middot;
+            <span class="current">Stats</span>
+        </p>
+    </div>
 
-<div id="header-container"></div>
-<script type="module">
-    import { initHeader, highlightActiveNav } from './js/core/header.js';
+    <div class="section-heading">Team Popularity</div>
+    <div class="pop-chart" id="pop-chart"></div>
+    <button class="see-all" id="see-all-toggle" type="button">See all 32 teams &#9662;</button>
 
-    fetch('header.html')
-      .then(res => res.text())
-      .then(async html => {
-        document.getElementById('header-container').innerHTML = html;
+    <div class="pop-tooltip" id="pop-tooltip" hidden>
+        <p class="pop-tooltip-title" id="pop-tooltip-title"></p>
+        <div class="pop-tooltip-owners" id="pop-tooltip-owners"></div>
+    </div>
+</div>
 
-        await initHeader(); // <-- ensures currentWeek + seasonType are fetched + rendered
-        const currentPage = window.location.pathname.split("/").pop().replace(".html","");
-        highlightActiveNav(currentPage);
-      });
+<script>
+    const TEAM_ABBR = {
+        'Arizona': 'ari', 'Atlanta': 'atl', 'Baltimore': 'bal', 'Buffalo': 'buf', 'Carolina': 'car',
+        'Chicago': 'chi', 'Cincinnati': 'cin', 'Cleveland': 'cle', 'Dallas': 'dal', 'Denver': 'den',
+        'Detroit': 'det', 'Green Bay': 'gb', 'Houston': 'hou', 'Indianapolis': 'ind', 'Jacksonville': 'jax',
+        'Kansas City': 'kc', 'Los Angeles (Chargers)': 'lac', 'Los Angeles (Rams)': 'lar', 'Las Vegas': 'lv',
+        'Miami': 'mia', 'Minnesota': 'min', 'New England': 'ne', 'New Orleans': 'no',
+        'New York (Giants)': 'nyg', 'New York (Jets)': 'nyj', 'Philadelphia': 'phi', 'Pittsburgh': 'pit',
+        'Seattle': 'sea', 'San Francisco': 'sf', 'Tampa': 'tb', 'Tennessee': 'ten', 'Washington': 'wsh'
+    };
+
+    const TEAM_FULL_NAME = {
+        ari: 'Arizona', atl: 'Atlanta', bal: 'Baltimore', buf: 'Buffalo', car: 'Carolina', chi: 'Chicago',
+        cin: 'Cincinnati', cle: 'Cleveland', dal: 'Dallas', den: 'Denver', det: 'Detroit', gb: 'Green Bay',
+        hou: 'Houston', ind: 'Indianapolis', jax: 'Jacksonville', kc: 'Kansas City', lac: 'LA Chargers',
+        lar: 'LA Rams', lv: 'Las Vegas', mia: 'Miami', min: 'Minnesota', ne: 'New England', no: 'New Orleans',
+        nyg: 'NY Giants', nyj: 'NY Jets', phi: 'Philadelphia', pit: 'Pittsburgh', sea: 'Seattle',
+        sf: 'San Francisco', tb: 'Tampa Bay', ten: 'Tennessee', wsh: 'Washington'
+    };
+
+    // Every team's price, independent of whether anyone picked it (a team
+    // with zero owners, like LA Chargers this season, has no price embedded
+    // anywhere in POOL below, so this can't be derived from picks alone).
+    const TEAM_PRICE = {
+        ari: 10, atl: 35, bal: 70, buf: 65, car: 35, chi: 50, cin: 55, cle: 25, dal: 50, den: 50,
+        det: 55, gb: 50, hou: 55, ind: 35, jax: 50, kc: 60, lac: 55, lar: 80, lv: 25, mia: 15,
+        min: 40, ne: 55, no: 35, nyg: 35, nyj: 25, phi: 60, pit: 40, sea: 60, sf: 55, tb: 40,
+        ten: 30, wsh: 35
+    };
+
+    const LOGOS = {};
+    Object.keys(TEAM_FULL_NAME).forEach(abbr => { LOGOS[abbr] = 'assets/logos/' + abbr + '.png'; });
+
+    const BORDER_COLORS = {
+        ari: '#802030', atl: '#16130d', bal: '#907000', buf: '#d00000', car: '#0070b0',
+        chi: '#001020', cin: '#f03000', cle: '#300000', dal: '#002050', den: '#f04010',
+        det: '#0030a0', gb: '#16130d', hou: '#001030', ind: '#001070', jax: '#c08000',
+        kc: '#c01020', lac: '#001070', lar: '#002060', lv: '#16130d', mia: '#007070',
+        min: '#f0b000', ne: '#c00020', no: '#16130d', nyg: '#001070', nyj: '#006030',
+        phi: '#006030', pit: '#f0b000', sea: '#003080', sf: '#c02020', tb: '#c01020',
+        ten: '#4080d0', wsh: '#501010'
+    };
+
+    // Small Group is the more engaged subset called out in docs/pool-rules.md.
+    const SMALL_GROUP = new Set(['Erika', 'Chris R.', 'Emma', 'Eileen', 'Sean R.']);
+    const SG_COLORS = {
+        'Chris R.': '#1e3a5c',
+        'Eileen': '#a8791a',
+        'Emma': '#a5382a',
+        'Erika': '#2c5a3b',
+        'Sean R.': '#5a3a72'
+    };
+
+    function team(name, price) {
+        return { name, abbr: TEAM_ABBR[name], price };
+    }
+
+    // 2026 season picks, same roster as index.html.
+    const POOL = [
+        { player: 'Abby', teams: [team('Baltimore', 70), team('Green Bay', 50), team('New Orleans', 35), team('Pittsburgh', 40), team('San Francisco', 55)] },
+        { player: 'Ben', teams: [team('Arizona', 10), team('Atlanta', 35), team('Cleveland', 25), team('Indianapolis', 35), team('Las Vegas', 25), team('Miami', 15), team('Minnesota', 40), team('Tennessee', 30), team('Washington', 35)] },
+        { player: 'Chris R.', teams: [team('Baltimore', 70), team('Carolina', 35), team('Jacksonville', 50), team('New York (Giants)', 35), team('San Francisco', 55)] },
+        { player: 'Chris V.', teams: [team('Arizona', 10), team('Denver', 50), team('Miami', 15), team('New England', 55), team('San Francisco', 55), team('Seattle', 60)] },
+        { player: 'Dad', teams: [team('Baltimore', 70), team('Denver', 50), team('Detroit', 55), team('Miami', 15), team('Philadelphia', 60)] },
+        { player: 'Eileen', teams: [team('Baltimore', 70), team('Buffalo', 65), team('Detroit', 55), team('Philadelphia', 60)] },
+        { player: 'Emma', teams: [team('Atlanta', 35), team('Baltimore', 70), team('Cincinnati', 55), team('Detroit', 55), team('Washington', 35)] },
+        { player: 'Eric', teams: [team('Arizona', 10), team('Carolina', 35), team('Cleveland', 25), team('Denver', 50), team('Indianapolis', 35), team('Las Vegas', 25), team('Miami', 15), team('New York (Jets)', 25), team('Tennessee', 30)] },
+        { player: 'Erika', teams: [team('Buffalo', 65), team('Denver', 50), team('Detroit', 55), team('Los Angeles (Rams)', 80)] },
+        { player: 'Jackson', teams: [team('Atlanta', 35), team('Buffalo', 65), team('Chicago', 50), team('Green Bay', 50), team('Miami', 15), team('New York (Giants)', 35)] },
+        { player: 'Mom', teams: [team('Buffalo', 65), team('Green Bay', 50), team('Indianapolis', 35), team('Minnesota', 40), team('Seattle', 60)] },
+        { player: 'Pete', teams: [team('Arizona', 10), team('Denver', 50), team('Houston', 55), team('Los Angeles (Rams)', 80), team('New England', 55)] },
+        { player: 'Phyllis', teams: [team('Baltimore', 70), team('Dallas', 50), team('Houston', 55), team('Indianapolis', 35), team('Pittsburgh', 40)] },
+        { player: 'Scott', teams: [team('Arizona', 10), team('Detroit', 55), team('Houston', 55), team('Los Angeles (Rams)', 80), team('Miami', 15), team('Washington', 35)] },
+        { player: 'Sean B.', teams: [team('Buffalo', 65), team('Detroit', 55), team('Miami', 15), team('New England', 55), team('Seattle', 60)] },
+        { player: 'Sean R.', teams: [team('Baltimore', 70), team('Buffalo', 65), team('Detroit', 55), team('Philadelphia', 60)] },
+        { player: 'Stacy', teams: [team('Arizona', 10), team('Buffalo', 65), team('Cincinnati', 55), team('Green Bay', 50), team('Las Vegas', 25), team('Tampa', 40)] },
+        { player: 'Stephen', teams: [team('Buffalo', 65), team('Chicago', 50), team('Dallas', 50), team('Jacksonville', 50), team('New Orleans', 35)] },
+        { player: 'Tim', teams: [team('Arizona', 10), team('Buffalo', 65), team('Kansas City', 60), team('Miami', 15), team('Minnesota', 40), team('Philadelphia', 60)] },
+        { player: 'Wes', teams: [team('Dallas', 50), team('Green Bay', 50), team('New England', 55), team('Pittsburgh', 40), team('San Francisco', 55)] }
+    ];
+
+    function teamBadgeEl(abbr, teamName) {
+        const color = BORDER_COLORS[abbr] || '#16130d';
+        if (LOGOS[abbr]) {
+            const img = document.createElement('img');
+            img.className = 'team-badge';
+            img.style.setProperty('--team', color);
+            img.src = LOGOS[abbr];
+            img.alt = teamName;
+            return img;
+        }
+        const div = document.createElement('div');
+        div.className = 'team-badge-placeholder';
+        div.style.setProperty('--team', color);
+        div.textContent = abbr.toUpperCase();
+        return div;
+    }
+
+    const TOP_N = 8;
+
+    // One tooltip element shared by every row; pinning state lives here
+    // (not per-row) so clicking row B while row A is pinned cleanly hands
+    // the pin off instead of leaving row A's own pinned flag stale.
+    let pinnedTrigger = null;
+
+    function showOwnerTooltip(anchorEl, owners, teamName) {
+        const tooltip = document.getElementById('pop-tooltip');
+        const titleEl = document.getElementById('pop-tooltip-title');
+        const ownersEl = document.getElementById('pop-tooltip-owners');
+        titleEl.textContent = teamName + ' owners';
+        ownersEl.innerHTML = '';
+        owners.forEach(player => {
+            const el = document.createElement('span');
+            el.className = 'pop-tooltip-owner';
+            const name = document.createElement('span');
+            name.textContent = player;
+            el.appendChild(name);
+            if (SMALL_GROUP.has(player)) {
+                const star = document.createElement('span');
+                star.className = 'pop-tooltip-owner-star';
+                star.textContent = '★';
+                star.style.color = SG_COLORS[player];
+                el.appendChild(star);
+            }
+            ownersEl.appendChild(el);
+        });
+
+        // Anchored to the count text itself (what you actually hovered/
+        // tapped), right-aligned to it since the count sits at the row's
+        // right edge, with a viewport-bottom clamp so it never runs off
+        // screen for rows near the bottom of the visible area.
+        tooltip.style.visibility = 'hidden';
+        tooltip.hidden = false;
+        const r = anchorEl.getBoundingClientRect();
+        const tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
+        const gap = 6;
+        let left = r.right - tw;
+        left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+        let top = r.bottom + gap;
+        top = Math.min(top, window.innerHeight - th - 8);
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+        tooltip.style.visibility = 'visible';
+    }
+    function hideOwnerTooltip() {
+        document.getElementById('pop-tooltip').hidden = true;
+        pinnedTrigger = null;
+    }
+
+    function wireOwnerTooltip(trigger, anchorEl, owners, teamName) {
+        trigger.addEventListener('pointerenter', () => { if (!pinnedTrigger) showOwnerTooltip(anchorEl, owners, teamName); });
+        trigger.addEventListener('pointerleave', () => { if (!pinnedTrigger) hideOwnerTooltip(); });
+        trigger.addEventListener('click', e => {
+            e.stopPropagation();
+            if (pinnedTrigger === trigger) { hideOwnerTooltip(); return; }
+            pinnedTrigger = trigger;
+            showOwnerTooltip(anchorEl, owners, teamName);
+        });
+    }
+
+    function popRow(abbr, owners, maxCount, extra) {
+        const row = document.createElement('div');
+        row.className = 'pop-row' + (owners.length ? ' has-owners' : '') + (extra ? ' pop-row-extra' : '');
+
+        const top = document.createElement('div');
+        top.className = 'pop-row-top';
+        top.appendChild(teamBadgeEl(abbr, TEAM_FULL_NAME[abbr]));
+        const name = document.createElement('span');
+        name.className = 'pop-name';
+        name.textContent = TEAM_FULL_NAME[abbr];
+        top.appendChild(name);
+        const price = document.createElement('span');
+        price.className = 'pop-price';
+        price.textContent = '$' + TEAM_PRICE[abbr];
+        top.appendChild(price);
+        const count = document.createElement('span');
+        count.className = 'pop-count';
+        count.textContent = owners.length + (owners.length === 1 ? ' owner' : ' owners');
+        top.appendChild(count);
+        row.appendChild(top);
+
+        const track = document.createElement('div');
+        track.className = 'pop-bar-track';
+        const fill = document.createElement('div');
+        const pct = (owners.length / maxCount) * 100;
+        fill.className = 'pop-bar-fill' + (pct >= 100 ? ' full' : '');
+        fill.style.width = pct + '%';
+        track.appendChild(fill);
+        row.appendChild(track);
+
+        if (owners.length) wireOwnerTooltip(row, count, owners, TEAM_FULL_NAME[abbr]);
+
+        return row;
+    }
+
+    function renderTeamPopularity() {
+        const ownersByTeam = {};
+        Object.keys(TEAM_FULL_NAME).forEach(abbr => { ownersByTeam[abbr] = []; });
+        POOL.forEach(p => p.teams.forEach(t => ownersByTeam[t.abbr].push(p.player)));
+
+        const abbrs = Object.keys(TEAM_FULL_NAME).sort((a, b) =>
+            ownersByTeam[b].length - ownersByTeam[a].length ||
+            TEAM_PRICE[b] - TEAM_PRICE[a] ||
+            TEAM_FULL_NAME[a].localeCompare(TEAM_FULL_NAME[b])
+        );
+        const maxCount = ownersByTeam[abbrs[0]].length;
+
+        const chartEl = document.getElementById('pop-chart');
+        chartEl.innerHTML = '';
+        abbrs.forEach((abbr, i) => chartEl.appendChild(popRow(abbr, ownersByTeam[abbr], maxCount, i >= TOP_N)));
+
+        const toggle = document.getElementById('see-all-toggle');
+        toggle.addEventListener('click', () => {
+            const expanded = chartEl.classList.toggle('expanded');
+            toggle.textContent = expanded ? 'Show fewer ▴' : 'See all 32 teams ▾';
+        });
+
+        document.addEventListener('click', hideOwnerTooltip);
+    }
+
+    async function initWeekTag() {
+        const weekTagEl = document.getElementById('week-tag');
+        try {
+            const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            const week = data.week.number;
+            const seasonType = data.leagues[0].season.type.name;
+            weekTagEl.textContent = seasonType === 'Regular Season' ? 'Week ' + week + ' · ' + seasonType : seasonType;
+        } catch (err) {
+            console.error('Failed to load current week info:', err);
+            weekTagEl.textContent = '';
+        }
+    }
+
+    renderTeamPopularity();
+    initWeekTag();
 </script>
-
-
-<div id="stats-container"></div>
-
-<script src="js/pages/stats.js" type="module"></script>
 </body>
 </html>
