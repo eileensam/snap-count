@@ -41,7 +41,7 @@
         }
         .page-nav { font-size: 0.78rem; margin: 0 0 1.6rem; }
         .page-nav a { color: var(--ink-soft); }
-        .page-nav .current { color: var(--ink); font-weight: 700; }
+        .page-nav .current { color: var(--ink); font-weight: 700; text-decoration: none; }
 
         .lede {
             font-style: italic;
@@ -72,7 +72,11 @@
     <div class="header">
         <div class="wordmark">Snap-Count</div>
         <p class="week-tag" id="week-tag">&hellip;</p>
-        <p class="page-nav"><a href="index.html">Home</a> &middot; <span class="current">Rules</span></p>
+        <p class="page-nav">
+            <a href="index.html">Leaderboard</a> &middot;
+            <a href="index.html?tab=games">Games</a> &middot;
+            <span class="current">Rules</span>
+        </p>
     </div>
 
     <p class="lede">This pool has run since 1997, on a format from a Forbes magazine article.</p>

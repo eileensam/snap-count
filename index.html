@@ -43,27 +43,18 @@
             margin: 0 0 0.4rem;
         }
         .page-nav { font-size: 0.78rem; margin: 0 0 1.6rem; }
-        .page-nav a { color: var(--ink-soft); }
-        .page-nav .current { color: var(--ink); font-weight: 700; }
-
-        /* tabs */
-        .tabs { display: flex; gap: 1.6rem; border-bottom: 1.5px solid var(--ink); }
-        .tab {
+        .page-nav .nav-item {
             background: none;
             border: none;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -1.5px;
-            padding: 0 0 0.5rem;
-            font-family: 'Oswald', 'Arial Narrow', sans-serif;
-            font-weight: 600;
-            font-size: 1.05rem;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
+            padding: 0;
+            font: inherit;
             color: var(--ink-soft);
+            text-decoration: underline;
             cursor: pointer;
         }
-        .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
-        .tab-panel { margin-top: 1.2rem; margin-bottom: 2rem; }
+        .page-nav .nav-item.current { color: var(--ink); font-weight: 700; text-decoration: none; }
+
+        .tab-panel { margin-top: 1.6rem; margin-bottom: 2rem; border-top: 1.5px solid var(--ink); padding-top: 0.2rem; }
         .tab-panel[hidden] { display: none; }
         .graph { margin-bottom: 1.4rem; }
         .graph svg { display: block; width: 100%; height: auto; }
@@ -225,22 +216,21 @@
     <div class="header">
         <div class="wordmark">Snap-Count</div>
         <p class="week-tag" id="week-tag">&hellip;</p>
-        <p class="page-nav"><span class="current">Home</span> &middot; <a href="rules.html">Rules</a></p>
+        <p class="page-nav">
+            <button class="nav-item current" id="tab-leaderboard" data-tab="panel-leaderboard">Leaderboard</button> &middot;
+            <button class="nav-item" id="tab-games" data-tab="panel-games">Games</button> &middot;
+            <a class="nav-item" href="rules.html">Rules</a>
+        </p>
     </div>
 
-    <div class="tabs" role="tablist">
-        <button class="tab active" id="tab-leaderboard" role="tab" aria-selected="true" aria-controls="panel-leaderboard">Leaderboard</button>
-        <button class="tab" id="tab-games" role="tab" aria-selected="false" aria-controls="panel-games">Games</button>
-    </div>
-
-    <div class="tab-panel" id="panel-leaderboard" role="tabpanel" aria-labelledby="tab-leaderboard">
+    <div class="tab-panel" id="panel-leaderboard">
         <div class="graph" id="graph"></div>
         <div class="leaderboard" id="leaderboard">
             <p class="lb-empty">Loading&hellip;</p>
         </div>
     </div>
 
-    <div class="tab-panel" id="panel-games" role="tabpanel" aria-labelledby="tab-games" hidden>
+    <div class="tab-panel" id="panel-games" hidden>
         <div class="games" id="games">
             <p class="games-empty">Loading&hellip;</p>
         </div>
@@ -786,16 +776,19 @@
     }
 
     function initTabs() {
-        const tabs = document.querySelectorAll('.tab');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => {
-                    t.classList.toggle('active', t === tab);
-                    t.setAttribute('aria-selected', String(t === tab));
-                    document.getElementById(t.getAttribute('aria-controls')).hidden = t !== tab;
-                });
+        const tabs = document.querySelectorAll('.nav-item[data-tab]');
+        function activate(tab) {
+            tabs.forEach(t => {
+                t.classList.toggle('current', t === tab);
+                document.getElementById(t.getAttribute('data-tab')).hidden = t !== tab;
             });
-        });
+        }
+        tabs.forEach(tab => tab.addEventListener('click', () => activate(tab)));
+
+        // Cross-page links (e.g. from rules.html) can open straight to a tab.
+        const requested = new URLSearchParams(location.search).get('tab');
+        const requestedTab = requested && document.getElementById('tab-' + requested);
+        if (requestedTab) activate(requestedTab);
     }
 
     initTabs();
