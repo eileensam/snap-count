@@ -217,13 +217,41 @@
         }
         .lb-picks {
             display: none;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+            flex-direction: column;
+            gap: 0.45rem;
             margin: 0.6rem 0 0.1rem 2rem;
         }
         .lb-row.expanded .lb-picks { display: flex; }
-        .lb-pick { display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; }
+        .lb-pick { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
         .lb-pick-linked { cursor: pointer; text-decoration: underline; text-decoration-color: #ddd0ab; text-underline-offset: 2px; }
+        .lb-pick-name { flex: 1; }
+        .lb-pick-status {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            border-radius: 3px;
+            padding: 0.1rem 0.35rem;
+            flex-shrink: 0;
+        }
+        .lb-pick-status.win, .lb-pick-status.live.ahead { color: var(--under); background: #e3ead9; }
+        .lb-pick-status.loss, .lb-pick-status.live.behind { color: var(--over); background: #f3e2dd; }
+        .lb-pick-status.tie, .lb-pick-status.live.tied { color: var(--ink-soft); background: #ece5d0; }
+        .lb-pick-status.upcoming { color: #8a6a1f; background: #f2e2b8; }
+        .lb-pick-status.bye { color: #5c7079; background: #dfe3e6; }
+        .lb-pick-status.live {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .lb-pick-status.live::before {
+            content: '';
+            width: 0.35rem;
+            height: 0.35rem;
+            border-radius: 50%;
+            background: currentColor;
+        }
         .lb-pick .game-badge, .lb-pick .game-badge-placeholder { width: 1.3rem; height: 1.3rem; font-size: 0.4rem; }
     </style>
 </head>
@@ -357,17 +385,19 @@
         return (Math.round(n * 2) / 2).toString().replace(/^0\./, '.');
     }
 
-    function pickRow(t, teamsThisWeek) {
+    function pickRow(t, gameByTeam) {
         const row = document.createElement('div');
         row.className = 'lb-pick';
         row.appendChild(badgeEl(t.abbr, t.name));
         const name = document.createElement('span');
+        name.className = 'lb-pick-name';
         name.textContent = TEAM_FULL_NAME[t.abbr] || t.name;
         row.appendChild(name);
 
-        // Only bridge to the Games tab when this team actually has a game
-        // this week (byes and already-past-week picks stay unclickable).
-        if (teamsThisWeek.has(t.abbr)) {
+        const game = gameByTeam.get(t.abbr);
+        if (game) {
+            // Only bridge to the Games tab when this team actually has a
+            // game this week (byes and already-past-week picks stay plain).
             row.classList.add('lb-pick-linked');
             row.setAttribute('role', 'button');
             row.setAttribute('tabindex', '0');
@@ -382,12 +412,42 @@
             row.addEventListener('keydown', e => {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); goToGame(); }
             });
+
+            // Upcoming: kickoff day/time, nothing decided yet. Live: a
+            // "Live" marker, not a W/L call, since the game isn't final.
+            // Final: the actual W/L/T.
+            if (game.state === 'pre') {
+                const status = document.createElement('span');
+                status.className = 'lb-pick-status upcoming';
+                status.textContent = formatKickoff(game.date);
+                row.appendChild(status);
+            } else {
+                const isHome = game.home.abbr === t.abbr;
+                const own = Number(isHome ? game.home.score : game.away.score);
+                const opp = Number(isHome ? game.away.score : game.home.score);
+                const outcome = own > opp ? 'ahead' : own < opp ? 'behind' : 'tied';
+                const status = document.createElement('span');
+                if (game.state === 'in') {
+                    status.className = 'lb-pick-status live ' + outcome;
+                    status.textContent = 'Live';
+                } else {
+                    status.className = 'lb-pick-status ' + ({ ahead: 'win', behind: 'loss', tied: 'tie' })[outcome];
+                    status.textContent = ({ ahead: 'W', behind: 'L', tied: 'T' })[outcome];
+                }
+                row.appendChild(status);
+            }
+        } else if (gameByTeam.size) {
+            // We have this week's full schedule and this team isn't on it.
+            const status = document.createElement('span');
+            status.className = 'lb-pick-status bye';
+            status.textContent = 'Bye';
+            row.appendChild(status);
         }
 
         return row;
     }
 
-    function leaderboardRow(entry, teamsThisWeek) {
+    function leaderboardRow(entry, gameByTeam) {
         const row = document.createElement('div');
         row.className = 'lb-row' + (SMALL_GROUP.has(entry.player) ? ' small-group' : '');
         row.setAttribute('role', 'button');
@@ -433,7 +493,7 @@
 
         const picks = document.createElement('div');
         picks.className = 'lb-picks';
-        entry.teams.forEach(t => picks.appendChild(pickRow(t, teamsThisWeek)));
+        entry.teams.forEach(t => picks.appendChild(pickRow(t, gameByTeam)));
         row.appendChild(picks);
 
         function toggle() {
@@ -451,7 +511,11 @@
 
     function renderLeaderboard(teamPoints, gamesThisWeek) {
         const lbEl = document.getElementById('leaderboard');
-        const teamsThisWeek = new Set((gamesThisWeek || []).flatMap(g => [g.away.abbr, g.home.abbr]));
+        const gameByTeam = new Map();
+        (gamesThisWeek || []).forEach(g => {
+            gameByTeam.set(g.away.abbr, g);
+            gameByTeam.set(g.home.abbr, g);
+        });
         const entries = POOL.map(p => ({
             player: p.player,
             teams: p.teams,
@@ -471,7 +535,7 @@
 
         lbEl.innerHTML = '';
         entries.forEach(entry => {
-            const row = leaderboardRow(entry, teamsThisWeek);
+            const row = leaderboardRow(entry, gameByTeam);
             if (expandedPlayers.has(entry.player)) {
                 row.classList.add('expanded');
                 row.setAttribute('aria-expanded', 'true');
@@ -542,7 +606,7 @@
             const isSG = t.smallGroup;
             const color = isSG ? SG_COLORS[t.player] : '#6b6350';
             const d = t.values.map((v, i) => (i === 0 ? 'M' : 'L') + x(i) + ',' + y(v)).join(' ');
-            return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + (isSG ? 2 : 1) + '" opacity="' + (isSG ? 1 : 0.3) + '" stroke-linejoin="round" stroke-linecap="round"/>';
+            return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + (isSG ? 2 : 1.4) + '" opacity="' + (isSG ? 1 : 0.55) + '" stroke-linejoin="round" stroke-linecap="round"/>';
         }
 
         // Round point-value gridline step (0.5/1/2/5/10/...) landing on
