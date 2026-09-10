@@ -485,15 +485,22 @@
         const numWeeks = weeksGamesArr.length;
         if (numWeeks === 0) { graphEl.innerHTML = ''; return; }
 
-        const trajectories = playerTrajectories(weeksGamesArr);
+        // Every trajectory starts from a shared Week 0 = 0, so lines always
+        // have a real origin instead of floating from whatever Week 1 was.
+        const trajectories = playerTrajectories(weeksGamesArr).map(t => ({
+            player: t.player,
+            smallGroup: t.smallGroup,
+            values: [0, ...t.values]
+        }));
+        const numPoints = numWeeks + 1;
         const W = 640, H = 260;
         const padLeft = 8, padRight = 14, padTop = 14, padBottom = 22;
         const innerW = W - padLeft - padRight;
         const innerH = H - padTop - padBottom;
         const maxY = Math.max(1, ...trajectories.flatMap(t => t.values)) * 1.15;
 
-        function x(weekIdx) {
-            return numWeeks > 1 ? padLeft + (weekIdx / (numWeeks - 1)) * innerW : padLeft;
+        function x(pointIdx) {
+            return padLeft + (pointIdx / (numPoints - 1)) * innerW;
         }
         function y(v) {
             return padTop + innerH - (v / maxY) * innerH;
@@ -502,12 +509,6 @@
         function lineFor(t) {
             const isSG = t.smallGroup;
             const color = isSG ? SG_COLORS[t.player] : '#6b6350';
-            if (numWeeks === 1) {
-                // SG's single-week dot is drawn once below, by the per-week
-                // dot loop that covers every week including this one.
-                if (isSG) return '';
-                return '<circle cx="' + x(0) + '" cy="' + y(t.values[0]) + '" r="1.5" fill="' + color + '" opacity="0.3"/>';
-            }
             const d = t.values.map((v, i) => (i === 0 ? 'M' : 'L') + x(i) + ',' + y(v)).join(' ');
             return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + (isSG ? 2 : 1) + '" opacity="' + (isSG ? 1 : 0.3) + '" stroke-linejoin="round" stroke-linecap="round"/>';
         }
@@ -518,25 +519,28 @@
         const sgTrajectories = trajectories.filter(t => t.smallGroup);
         sgTrajectories.forEach(t => { svg += lineFor(t); });
 
-        // Small Group gets a persistent dot at every week (not just a fixed
-        // end label); everyone else stays an unlabeled faint line, but every
-        // point on every line (Full League included) gets an invisible
-        // hit-target so tap/hover detail works for anyone, not just SG.
+        // Small Group gets a persistent dot at every real week (not just a
+        // fixed end label); everyone else stays an unlabeled faint line, but
+        // every point on every real week (Full League included) gets an
+        // invisible hit-target so tap/hover detail works for anyone, not
+        // just SG. Week 0 is skipped here: everyone is tied at zero there,
+        // so a dot/tooltip on it has nothing to show.
         trajectories.forEach(t => {
             const color = t.smallGroup ? SG_COLORS[t.player] : '#16130d';
             t.values.forEach((v, i) => {
+                if (i === 0) return;
                 const cx = x(i), cy = y(v);
                 if (t.smallGroup) {
                     svg += '<circle cx="' + cx + '" cy="' + cy + '" r="2.5" fill="' + color + '"/>';
                 }
-                svg += '<circle class="graph-dot-hit" data-player="' + t.player + '" data-week="' + (i + 1) +
+                svg += '<circle class="graph-dot-hit" data-player="' + t.player + '" data-week="' + i +
                     '" data-value="' + formatPoints(v) + '" data-x="' + cx + '" data-y="' + cy + '" data-color="' + color +
                     '" cx="' + cx + '" cy="' + cy + '" r="6" fill="transparent"/>';
             });
         });
 
-        for (let w = 1; w <= numWeeks; w++) {
-            svg += '<text x="' + x(w - 1) + '" y="' + (H - 6) + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" fill="#6b6350" text-anchor="middle">' + w + '</text>';
+        for (let w = 0; w <= numWeeks; w++) {
+            svg += '<text x="' + x(w) + '" y="' + (H - 6) + '" font-family="Oswald, Arial Narrow, sans-serif" font-size="9" fill="#6b6350" text-anchor="middle">' + w + '</text>';
         }
 
         svg += '<g id="graph-tooltip" visibility="hidden">' +
