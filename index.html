@@ -503,7 +503,10 @@
             const isSG = t.smallGroup;
             const color = isSG ? SG_COLORS[t.player] : '#6b6350';
             if (numWeeks === 1) {
-                return '<circle cx="' + x(0) + '" cy="' + y(t.values[0]) + '" r="' + (isSG ? 3 : 1.5) + '" fill="' + color + '" opacity="' + (isSG ? 1 : 0.3) + '"/>';
+                // SG's single-week dot is drawn once below, by the per-week
+                // dot loop that covers every week including this one.
+                if (isSG) return '';
+                return '<circle cx="' + x(0) + '" cy="' + y(t.values[0]) + '" r="1.5" fill="' + color + '" opacity="0.3"/>';
             }
             const d = t.values.map((v, i) => (i === 0 ? 'M' : 'L') + x(i) + ',' + y(v)).join(' ');
             return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + (isSG ? 2 : 1) + '" opacity="' + (isSG ? 1 : 0.3) + '" stroke-linejoin="round" stroke-linecap="round"/>';
