@@ -49,7 +49,7 @@ Once the commissioner sent this season's picks, `index.html` went from the day-o
 ## Phase 2: full v2 rebuild (after 2026-09-09)
 
 - Leaderboard and stats pages, rebuilt with cleaner scoring logic (fixes v1's playoff-round and tie-handling bugs).
-- New stat ideas to explore: all-time archive (since 1997), rivalry tracker (head-to-head between two players over the years), nail-biters (biggest live win-probability swings), bandwagon index (cost vs. points, i.e. value/underperformance), rank volatility (biggest week-over-week swing), playoff swing (points gained/lost in postseason relative to regular-season standing), ideal lineup in hindsight (best possible $250 roster after the fact, distinct from legacy's pre-pick Perfect Lineup: retrospective trivia once picks are locked, not a recommendation, so it doesn't reopen the "not a recommendation engine" decision in [decisions.md](decisions.md)).
+- New stat ideas to explore: all-time archive (since 1997), rivalry tracker (head-to-head between two players over the years), nail-biters (biggest live win-probability swings), bandwagon index (cost vs. points, i.e. value/underperformance), rank volatility (biggest week-over-week swing), playoff swing (points gained/lost in postseason relative to regular-season standing), ideal lineup in hindsight (**built**, see Status: best possible $250 roster given results so far, distinct from legacy's pre-pick Perfect Lineup: retrospective trivia once picks are locked, not a recommendation, so it doesn't reopen the "not a recommendation engine" decision in [decisions.md](decisions.md)).
 
 Phase 1 replaced `index.html` (the original homepage) directly when it first shipped; as of the day-one gameday launch above, `index.html` is the gameday view and the pick-helper lives at `team-picker.html` instead. See [decisions.md](decisions.md).
 
@@ -59,10 +59,11 @@ Phase 1 replaced `index.html` (the original homepage) directly when it first shi
 - Built: countdown, budget-tracked catalog with conference/division filters and sort, coverage report, share picks, saved lineups (with duplicate-name prevention and in-place editing).
 - Day-one gameday launch is built: live games list with point stakes, rules page, cross-page nav.
 - Live leaderboard & graph (above) is built: real picks, real scoring, tap-to-expand picks, trajectory graph with hover/tap detail, scorebug for live/final games, unified Leaderboard/Games/Rules nav.
+- Stats page (`stats.html`) has two sections so far: Ideal Lineup and Team Popularity. Ideal Lineup is a 0/1 knapsack over every team's price and points-so-far (cumulative, same ESPN data and scoring as the leaderboard): the max points reachable within the $250 cap, then the cheapest way to reach it, so ties collapse to same-price/same-points swaps ("Team A or Team B") rather than every roster that merely fits under budget.
 
 ## Open items
 
 - Postseason point-stake display (3/3/5/5) on the games list, not needed until the playoffs.
-- Fun stats (see Phase 2 stat ideas below) and the fun-fact blurb (a short editorial note, like v1 had, restyled on-system) are still unbuilt.
+- Remaining fun stats (see Phase 2 stat ideas above) and the fun-fact blurb (a short editorial note, like v1 had, restyled on-system) are still unbuilt.
 - Link the source Forbes article on `rules.html` once the actual URL is confirmed.
 - Decommission `team-picker.html` once picks settle for the season (nav link to it is already removed; the page itself is still live for stragglers).

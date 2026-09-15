@@ -52,8 +52,24 @@
             text-transform: uppercase;
             color: var(--ink);
             margin: 2.2rem 0 0.4rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed #c9bd9a;
         }
-        .section-heading:first-of-type { margin-top: 0; }
+        .section-heading:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+
+        .ideal-stat-line { display: flex; align-items: baseline; gap: 0.5rem; margin: 0 0 0.8rem; }
+        .ideal-stat-num { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 1.8rem; color: var(--ink); }
+        .ideal-stat-label {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif; font-size: 0.7rem; font-weight: 600;
+            letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-soft);
+        }
+        .ideal-stat-budget { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--ink-soft); }
+        .ideal-team-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.32rem 0; }
+        .ideal-name { flex: 1; font-weight: 700; font-size: 0.9rem; }
+        .pts-pill {
+            font-family: 'Oswald', 'Arial Narrow', sans-serif; font-variant-numeric: tabular-nums;
+            font-weight: 700; font-size: 0.7rem; color: var(--ink); flex-shrink: 0; min-width: 2.2rem; text-align: right;
+        }
 
         .pop-chart { margin: 0; position: relative; }
         .pop-row { padding: 0.4rem 0; }
@@ -179,6 +195,13 @@
         </p>
     </div>
 
+    <div class="section-heading">Ideal Lineup</div>
+    <div class="ideal-stat-line">
+        <span class="ideal-stat-num" id="ideal-stat-num">&hellip;</span><span class="ideal-stat-label">pts</span>
+        <span class="ideal-stat-budget" id="ideal-stat-budget"></span>
+    </div>
+    <div id="ideal-rows"></div>
+
     <div class="section-heading">Team Popularity</div>
     <div class="pop-chart" id="pop-chart"></div>
     <button class="see-all" id="see-all-toggle" type="button">See all 32 teams &#9662;</button>
@@ -218,6 +241,7 @@
         min: 40, ne: 55, no: 35, nyg: 35, nyj: 25, phi: 60, pit: 40, sea: 60, sf: 55, tb: 40,
         ten: 30, wsh: 35
     };
+    const BUDGET = 250;
 
     const LOGOS = {};
     Object.keys(TEAM_FULL_NAME).forEach(abbr => { LOGOS[abbr] = 'assets/logos/' + abbr + '.png'; });
@@ -411,23 +435,173 @@
         document.addEventListener('click', hideOwnerTooltip);
     }
 
-    async function initWeekTag() {
+    async function fetchCurrentWeekInfo() {
+        const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return { week: data.week.number, seasonType: data.leagues[0].season.type.name };
+    }
+
+    async function fetchWeekGames(week) {
+        const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=' + week);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return data.events.map(event => {
+            const comp = event.competitions[0];
+            const home = comp.competitors.find(c => c.homeAway === 'home');
+            const away = comp.competitors.find(c => c.homeAway === 'away');
+            return {
+                date: event.date,
+                state: event.status.type.state,
+                home: { abbr: home.team.abbreviation.toLowerCase(), score: home.score },
+                away: { abbr: away.team.abbreviation.toLowerCase(), score: away.score }
+            };
+        });
+    }
+
+    // Only finished games count toward points; live/upcoming games contribute
+    // nothing yet, matching index.html's leaderboard scoring.
+    function teamPointsFromGames(games) {
+        const points = {};
+        games.forEach(g => {
+            if (g.state !== 'post') return;
+            const awayScore = Number(g.away.score), homeScore = Number(g.home.score);
+            if (awayScore === homeScore) {
+                points[g.away.abbr] = (points[g.away.abbr] || 0) + 0.5;
+                points[g.home.abbr] = (points[g.home.abbr] || 0) + 0.5;
+            } else {
+                const winner = awayScore > homeScore ? g.away.abbr : g.home.abbr;
+                points[winner] = (points[winner] || 0) + 1;
+            }
+        });
+        return points;
+    }
+
+    function mergePoints(...maps) {
+        const out = {};
+        maps.forEach(m => Object.entries(m).forEach(([abbr, pts]) => {
+            out[abbr] = (out[abbr] || 0) + pts;
+        }));
+        return out;
+    }
+
+    function formatPoints(n) {
+        return (Math.round(n * 2) / 2).toString().replace(/^0\./, '.');
+    }
+
+    // Best $250 roster in hindsight: a 0/1 knapsack over every team's price
+    // and points-so-far, taking the cheapest way to reach the max score so
+    // ties collapse to same-price/same-points swaps instead of every roster
+    // that merely fits under budget.
+    function computeIdealLineup(pointsByAbbr) {
+        const items = Object.keys(TEAM_PRICE).map(abbr => ({
+            abbr, price: TEAM_PRICE[abbr], value: Math.round((pointsByAbbr[abbr] || 0) * 2)
+        }));
+        const n = items.length;
+        const dp = Array.from({ length: n + 1 }, () => new Array(BUDGET + 1).fill(0));
+        for (let i = 1; i <= n; i++) {
+            const { price, value } = items[i - 1];
+            for (let c = 0; c <= BUDGET; c++) {
+                dp[i][c] = dp[i - 1][c];
+                if (price <= c) dp[i][c] = Math.max(dp[i][c], dp[i - 1][c - price] + value);
+            }
+        }
+        const maxValue = dp[n][BUDGET];
+        let minCost = 0;
+        while (minCost < BUDGET && dp[n][minCost] < maxValue) minCost++;
+
+        const included = [];
+        let c = minCost;
+        for (let i = n; i >= 1 && c >= 0; i--) {
+            if (dp[i][c] !== dp[i - 1][c]) {
+                included.push(items[i - 1]);
+                c -= items[i - 1].price;
+            }
+        }
+
+        // Pair up a same-price/same-points swap only when it's a clean 1-for-1
+        // (one included, one twin left out); anything messier just lists the
+        // team that was actually picked.
+        const byKey = new Map();
+        items.forEach(it => {
+            const key = it.price + ':' + it.value;
+            if (!byKey.has(key)) byKey.set(key, []);
+            byKey.get(key).push(it);
+        });
+        const includedAbbrs = new Set(included.map(t => t.abbr));
+        const rows = included
+            .slice()
+            .sort((a, b) => b.price - a.price || a.abbr.localeCompare(b.abbr))
+            .map(t => {
+                const group = byKey.get(t.price + ':' + t.value);
+                const includedInGroup = group.filter(g => includedAbbrs.has(g.abbr));
+                if (group.length === 2 && includedInGroup.length === 1) {
+                    const twin = group.find(g => g.abbr !== t.abbr);
+                    return { abbrs: [t.abbr, twin.abbr], price: t.price, pts: t.value / 2 };
+                }
+                return { abbrs: [t.abbr], price: t.price, pts: t.value / 2 };
+            });
+
+        return { pts: maxValue / 2, cost: minCost, rows };
+    }
+
+    function idealRow(entry) {
+        const row = document.createElement('div');
+        row.className = 'ideal-team-row';
+        entry.abbrs.forEach(abbr => row.appendChild(teamBadgeEl(abbr, TEAM_FULL_NAME[abbr])));
+        const name = document.createElement('span');
+        name.className = 'ideal-name';
+        name.textContent = entry.abbrs.map(abbr => TEAM_FULL_NAME[abbr]).join(' or ');
+        row.appendChild(name);
+        const price = document.createElement('span');
+        price.className = 'pop-price';
+        price.textContent = '$' + entry.price;
+        row.appendChild(price);
+        const pts = document.createElement('span');
+        pts.className = 'pts-pill';
+        pts.textContent = '+' + formatPoints(entry.pts);
+        row.appendChild(pts);
+        return row;
+    }
+
+    function renderIdealLineup(result) {
+        document.getElementById('ideal-stat-num').textContent = formatPoints(result.pts);
+        document.getElementById('ideal-stat-budget').textContent = '$' + result.cost + ' of $' + BUDGET;
+        const rowsEl = document.getElementById('ideal-rows');
+        rowsEl.innerHTML = '';
+        result.rows.forEach(entry => rowsEl.appendChild(idealRow(entry)));
+    }
+
+    async function initWeekTagAndIdealLineup() {
         const weekTagEl = document.getElementById('week-tag');
+        let week, seasonType;
         try {
-            const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const data = await res.json();
-            const week = data.week.number;
-            const seasonType = data.leagues[0].season.type.name;
+            ({ week, seasonType } = await fetchCurrentWeekInfo());
             weekTagEl.textContent = seasonType === 'Regular Season' ? 'Week ' + week + ' · ' + seasonType : seasonType;
         } catch (err) {
             console.error('Failed to load current week info:', err);
             weekTagEl.textContent = '';
+            return;
+        }
+
+        try {
+            let priorWeeksGames = [];
+            if (seasonType === 'Regular Season' && week > 1) {
+                priorWeeksGames = await Promise.all(
+                    Array.from({ length: week - 1 }, (_, i) => fetchWeekGames(i + 1))
+                );
+            }
+            const basePoints = teamPointsFromGames(priorWeeksGames.flat());
+            const games = await fetchWeekGames(week);
+            const pointsByAbbr = mergePoints(basePoints, teamPointsFromGames(games));
+            renderIdealLineup(computeIdealLineup(pointsByAbbr));
+        } catch (err) {
+            console.error('Failed to compute ideal lineup:', err);
         }
     }
 
     renderTeamPopularity();
-    initWeekTag();
+    initWeekTagAndIdealLineup();
 </script>
 </body>
 </html>
